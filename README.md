@@ -1,2 +1,3 @@
 # Kryptonite Bot
- A dynamic economy bot.
+
+ A dynamic discord economy bot written in python.
