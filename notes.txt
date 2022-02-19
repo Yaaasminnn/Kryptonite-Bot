@@ -1,0 +1,75 @@
+currency class:
+
+  every round, Vfluc_chance is rolled and compared to threshold. if it is higher, the value increases.
+  if not, it decreases. if they are equal nothing happens. afterward the threshold is modified,
+  if the value increased, the threshold is more likely to decrease to allow the value to rise more
+  easily, and vice versa. threshold increases by Tfluc_chance which determines whether it increases or
+  decreases (randint(-1,2) for increase and randint(-2,1) for decrease) while Tmag determines
+  the magnitude of the increase.
+
+  For fluctuating the values, both threshold and value work similarly. there is a max_mag for both
+  and a calculated mag which is randomly a range from (0,max_mag) inclusively. these are then added
+  to value and threshold respectively.
+
+  for storing:
+  normally, each round, existing currencies are loaded from their json file and simulated.
+  afterward, their json files are written to be saved. cache file? stored in memory?
+
+  caching:
+  maybe keep a dict in memory and add the details to that. only value, creation date, previous values and name.
+  previous values are stored by the hour.
+
+  
+  attributes:
+      value: value of the currency variable float()
+        if lower than lowpoint, delete it
+
+      Vfluc_chance: randint compared to threshold range(0,100) # not stored
+
+      Vmax_mag: the maximum amount the value can fluctuate by. variable float()
+
+      Vmag: how much the value flutuates by per cycle. variable float(0,Vmax_mag) # not stored
+
+
+      threshold: how likely the currency is to in/decrease int(1-99)
+
+      Tfluc_chance: randint determining whether threshold increases or decreases range(-2,2) # not stored
+
+      Tmag: randint for how much the threshold fluctates range() # not stored
+
+      Tmax_mag: max value the threshold can fluctuate by variable float()
+
+
+  methods:
+      simulate()
+
+      fluctuate(sign[-1,1])
+
+      save()
+
+      cache()
+
+      delete()
+
+      init()
+
+
+Should a crypto be kept in cache after deletion?
+we could set its value to 0
+or it could stay alive? but how do you buy it?
+
+
+caching:
+    we write every minute, so whats the point?
+    well, ppl might call commands even more,
+    so we can hold the data in ram
+    {
+        "name":""
+        "value": 0.53
+        "creation date": ""
+        "values": [ #only the last 24 hrs, so 24 entries.
+            "date": ""
+            "value":
+        ]
+    }
+Instead of random, should the currencies use perlin noise and a seed?
