@@ -41,3 +41,24 @@ def create_json(file_path):
     with open(file_path, "w") as file:
         a={}
         json.dump(a, file)
+
+def del_dict_key(dict:dict, key, index:int=None):
+    """
+    Deletes an item from a dict and returns the mutated dict.
+
+    Used when mutating a dict but the user wants to keep the original version. This makes a copy of the dict, mutates
+    and returns the copy.
+
+    Takes in the dict, the key to delete and optionally the key's index if it is a list. if it is a list and the index
+    is not None, we only delete the index in said key's list. otherwise, if no index is given, we only delete the key.
+    """
+    if index is None:
+        del dict[key]
+    else:
+        del dict[key][index]
+    return dict
+
+def del_dict_keys(dict:dict, *keys):
+    for key in keys:
+        del dict[key]
+    return dict

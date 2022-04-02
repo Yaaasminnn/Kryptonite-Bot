@@ -42,6 +42,13 @@ currency class:
 
   methods:
       simulate()
+        rolls a dice for chance it will increase.
+        if chance > threshold:
+            roll a number for Tfluc_chance. more biased to decrease
+            add the magnitude of Tfluc_chance to a number between(0, Tmax_mag) to threshold
+
+            determine a value between (0, Vmax_mag) and add to value
+            modify Vmax_mag. randomly between 0.001 and 0.01 cents?     grow gradually over time unaffected by the currency value
 
       fluctuate(sign[-1,1])
 
@@ -72,4 +79,32 @@ caching:
             "value":
         ]
     }
-Instead of random, should the currencies use perlin noise and a seed?
+    unload currencies after use
+Instead of random, should the currencies use perlin noise and a seed
+
+take cmd arguments via args and pass them into a python script?
+
+backup script
+
+
+user class:
+    # loads up a file in a db/users/[user_id].json
+    standard money: float
+    holdings:list[dict{str, float}]
+        [
+            {"crypto_name": 100} // indexes are the number of shares
+        ]
+    last accessed: str(datetime) // when their file was last accessed
+
+    init() // takes the user id and loads up their object from the json
+    verify_holdings() // verifies if all currencies in the user's account are still alive
+    check_last_accessed() // assigns a new datetime on init
+    trade() // when buying/selling, modify the holdings
+
+trading:
+    command
+    loads up user instance
+    loads up currency instance
+    verifies the user has enough
+    currency.trade() // calculates the purchase and effect on the currency
+    user.trade() // modifies the user's holdings
