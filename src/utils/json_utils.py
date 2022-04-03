@@ -34,6 +34,9 @@ def update_json(file_path, file_data, operation="w"):
     with open(file_path, operation) as file:
         file.write(json.dumps(file_data, indent=4, sort_keys=False))
 
+def pretty_print(data:dict):
+    print(json.dumps(data, indent=4, sort_keys=False))
+
 def create_json(file_path):
     """
     Creates a json file.

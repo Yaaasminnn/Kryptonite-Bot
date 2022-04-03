@@ -3,7 +3,6 @@ import os
 from random import randint, uniform, choice
 import datetime
 from json_utils import *
-os.chdir("/home/loona/programming/Kryptonite-Bot/src")
 crypto_cache = [] # the list of crypto currencies. we use this if someone wants to retrieve information on a currency
 
 class CryptoCurrency:
@@ -23,10 +22,9 @@ class CryptoCurrency:
                 Vmax_mag: The maximum magnitude the value can fluctuate by
                 threshold: the likelyhood of the value decreasing in percent range(0.0,100.0) exclusively
                 Tmax_mag: the maximum magnitude the threshold can fluctuate by.
-
-            todo:
-                maybe allow self vars of all the json indexes, and saving sets all those values to the dict and saves
-
+                total_shares: the total number of shares bought
+                delete_value: the value the currency will be deleted at
+                UID: id of the token. do we need this?
 
         """
         if currency is None: # if there was no argument given, it creates a new currency
@@ -169,7 +167,7 @@ class CryptoCurrency:
 
         # searches for any previous records of the dict in the cache and overwrites it
         cache_len = len(crypto_cache)
-        for i in range(cache_len-1, -1, -1): # iterates through the list backwards. not working because the dict is too small. go through normally and make a list of bad dicts to remove.
+        for i in range(cache_len-1, -1, -1): # iterates through the list backwards.
             if crypto_cache[i]["name"] == self.currency["name"]:
                 del crypto_cache[i]
 
@@ -195,7 +193,9 @@ class CryptoCurrency:
 
         # deletes it from the cache as well so it cannot be referenced
         for cached in crypto_cache:
-            if cached["name"] == self.currency["name"]: crypto_cache.remove(cached)
+            if cached["name"] == self.currency["name"]:
+                crypto_cache.remove(cached)
+                break
         #return # maybe deleter method?
 
     def compute(self):
@@ -301,31 +301,36 @@ class CryptoCurrency:
         :return:
         """
 
-# EXECUTION AND TESTING OF FEATURES BELOW
-db = load_json("db/crypto_currencies.json")
+if __name__ == '__main__':
+    os.chdir("/home/loona/programming/Kryptonite-Bot/src")
 
-# adding currencies
-"""
-new_crypto = CryptoCurrency()
-print(new_crypto.currency)"""
+    # EXECUTION AND TESTING OF FEATURES BELOW
+    db = load_json("db/crypto_currencies.json")
 
-#deleting currencies
-"""
-for dict in db["currencies"]:
-    dict = CryptoCurrency(dict)
-    dict.delete()
-"""
+    # adding currencies
+    """
+    new_crypto = CryptoCurrency()
+    print(new_crypto.currency)"""
 
-# caching currencies
-#"""
-new = CryptoCurrency()
-print(new.currency["value"], new.currency["threshold"], new.currency["Vmax_mag"])
-new.simulate()
-print(new.currency["value"], new.currency["threshold"], new.currency["Vmax_mag"])
-#"""
+    #deleting currencies
+    """
+    for dict in db["currencies"]:
+        dict = CryptoCurrency(dict)
+        dict.delete()
+    """
 
-#prints the cache
-"""cache_dict = {
-    "crypt_cache": crypto_cache
-}
-print(json.dumps(cache_dict, indent=4, sort_keys=False))"""
+    # caching currencies
+    #"""
+    new = CryptoCurrency()
+    new.cache()
+    print(crypto_cache)
+    #print(new.currency["value"], new.currency["threshold"], new.currency["Vmax_mag"])
+    #new.simulate()
+    #print(new.currency["value"], new.currency["threshold"], new.currency["Vmax_mag"])
+    #"""
+
+    #prints the cache
+    """cache_dict = {
+        "crypt_cache": crypto_cache
+    }
+    print(json.dumps(cache_dict, indent=4, sort_keys=False))"""

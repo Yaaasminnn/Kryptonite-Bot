@@ -1,3 +1,5 @@
-src/db/
+src/db/users/*
+src/db/crypto_currencies.json
 src/kryptonite_bot/imp_info.json
 src/LUNA bot/
+*.pyc
