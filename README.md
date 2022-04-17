@@ -23,9 +23,13 @@ Add in the discord bot boilerplate.
 
 front end(lots of embeds)
 
-Create webpages
+Create webpages (not in 1.0)
     show info on any currency
     show info on a user?
+    
+Currency history can be seen via a visual graph (not in 1.0)
+
+Gambling features (not in 1.0, but will be added ASAP)
 
 backup script(for the database)
     have the pi use rsync and crontab?
