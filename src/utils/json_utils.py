@@ -61,7 +61,7 @@ def del_dict_key(dict:dict, key, index:int=None):
         del dict[key][index]
     return dict
 
-def del_dict_keys(dict:dict, *keys):
+def del_dict_keys(dict:dict, keys:list):
     for key in keys:
         del dict[key]
     return dict

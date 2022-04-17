@@ -4,6 +4,7 @@ from random import randint, uniform, choice
 import datetime
 from json_utils import *
 crypto_cache = [] # the list of crypto currencies. we use this if someone wants to retrieve information on a currency
+trade_constant = 1/100_000 # how much the value fluctuates
 
 class CryptoCurrency:
     def __init__(self, currency:dict=None):
@@ -290,16 +291,27 @@ class CryptoCurrency:
 
     def display_history(self): return
 
-    def trade(self, num_shares:int, buy:bool):
+    def buy(self, num:float):
         """
-        Processes a buy/sell request.
+        Buy function. Modifies the cryptocurrency value when buying it.
 
-        if the coin is bought(buy=True), the value will increase marginally based on the number of shares traded.
-        If it has been sold, it will decrease the value accordingly.
-        :param num_shares:
-        :param buy:
-        :return:
+        When buying, the currency value is increased very slightly. the total number of shares bought is multiplied by
+        the trade constant to determine the magnitude the currency value will increase by.
+
+        Examples:
+            // trade_constant = 1/100000
+            >>>self.buy(5) # value increases by 0.00005
         """
+        self.currency["value"]+=num*trade_constant
+
+    def sell(self, num:float):
+        """
+        Sell function. Modifies the cryptocurrency value when selling it.
+
+        When selling, the currency value is decreased very slighly. the total number of shares sold is multiplied by the
+        trade constant to determine the magnitude the currency value will decrease by
+        """
+        self.currency["value"]-=num*trade_constant
 
 if __name__ == '__main__':
     os.chdir("/home/loona/programming/Kryptonite-Bot/src")

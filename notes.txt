@@ -108,7 +108,7 @@ user class:
     trade() // when buying/selling, modify the holdings
     limit() // makes sure bank or wallet does not exceed the max(?)
 
-    wallet is used for daily, ambling etc.
+    wallet is used for daily, gambling etc.
     playing with crypto and transfers etc are all with the bank
     when buying/selling crypto, u choose which account.
 
