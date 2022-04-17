@@ -1,6 +1,27 @@
 import os
 from json_utils import *
 import datetime
+import asyncio
+
+tax_rate, taxed_trading_limit_dollars, tax_free_trading_limit_dollars, \
+trading_limit_shares, max_transfer_limit, start_amount,\
+max_balance = None, None, None, None, None, None, None
+
+def load_constants():
+    """
+    Loads constants that are used.
+
+    These are in a json so they can easily be permanently changed during runtime.
+    """
+    global tax_rate, tax_free_trading_limit_dollars, trading_limit_shares, max_transfer_limit, start_amount, taxed_trading_limit_dollars, max_balance
+    constants = load_json("kryptonite_bot/constants.json")
+    max_transfer_limit = ["max transfer limit"]
+    trading_limit_shares = constants["trading limit shares"]
+    tax_free_trading_limit_dollars = constants["tax free trading limit dollars"]
+    taxed_trading_limit_dollars = constants["taxed trading limit dollars"]
+    tax_rate = constants["tax rate"]
+    start_amount = constants["start amount"]
+    max_balance = constants["max balance"]
 
 class User:
     def __init__(self, uid:int):
@@ -21,9 +42,7 @@ class User:
             create_json(f"db/users/{uid}.json")
             self.user = load_json(f"db/users/{uid}.json")
             self.user["uid"] = uid
-            self.user["wallet"] = 0.0
-            self.user["bank"] = 0.0
-            #self.user["last_accessed"] = str(datetime.datetime.now().replace(second=0, microsecond=0))
+            self.user["wallet"] = start_amount
             self.create_accounts() # creates both crypto accounts
 
             # saves the user
@@ -33,7 +52,6 @@ class User:
         self.verify_holdings()
         self.update_last_accessed()
         #pretty_print(self.user)
-        #self.save()
 
     def create_accounts(self):
         """
@@ -48,10 +66,7 @@ class User:
                 "name": "ntfa",
                 "balance": 0,
                 "holdings": {},
-                "num_holdings": 0,
-                "tax_rate":1.12,
-                "max_tradable_dollars": 50_000,
-                "max_tradable_shares": 1000
+                "num_holdings": 0
             }
         )
         accounts.append( # tax-free account
@@ -60,10 +75,7 @@ class User:
                 "name": "tfa",
                 "balance":0,
                 "holdings": {},
-                "num_holdings": 0,
-                "tax_rate":1,
-                "max_tradable_dollars": 10_000,
-                "max_tradable_shares": 1000,
+                "num_holdings": 0
             }
         )
         self.user["accounts"] = accounts
@@ -111,16 +123,70 @@ class User:
 
     def trade(self): pass
 
-    def bank_deposit(self): pass
+    def bank_deposit(self, amount:float, account_name:str):
+        """
+        Deposits the user's wallet into the bank account.
 
-    def bank_withdraw(self): pass
+        There are no limits on how often/how much one can transfer from their own accounts.
+        todo:
+            add support for depositing/withdrawing all
+        """
+        if amount > self.user["wallet"]:
+            return f"Insufficient wallet balance\nBalance: {self.user['wallet']}\nNeeded: {amount}"
 
-    def c_buy(self, account_name:str, num:int, token_val:int, token_name:str):
-        # determines which account to use.
+        self.user["wallet"] -=amount
+        if account_name == "tfa":
+            self.user["accounts"][1]["balance"] += amount
+        else:
+            self.user["accounts"][0]["balance"] += amount
+
+    def bank_withdraw(self, amount:float, account_name:str):
+        """
+        Withdraws money from the bank account to the user's wallet.
+
+        No limits on how often/how much can be withdrawn.
+        """
+        # determines which account
         if account_name == "tfa": account_index = 1
         else: account_index = 0
 
-        value = self.user["accounts"][account_index]["tax_rate"] * (num*token_val) # determines the value
+        if amount > self.user["accounts"][account_index]["balance"]: # cannot exceed existing funds
+            return f"Insufficient balance.\nBalance: {self.user['accounts'][account_index]['balance']}\nNeeded: {amount}"
+
+        self.user["accounts"][account_index]["balance"] -= amount
+        self.user["wallet"] += amount
+
+    def c_buy(self, account_name:str, num:int, token_val:int, token_name:str):
+        """
+        Buy function. Modifies the user's balance.
+
+        When buying the account's balance in decreased by the number of shares * the value of each token multiplied by
+        the tax rate.
+
+        First determines which account you are using. Tax free(tfa) or regular(ntfa). from there it determines the value
+        of the purchase with and without taxes as well as the tax rates. If the value of the purchase without tax
+        exceeds the trading limit(dollars), the order will be cancelled. also, if the value(tax included) is greater
+        than what the user has in their account, it will be cancelled as well. If a transfer goes through, deduct the
+        money and add the holding to the account.
+
+        Any other checks(currency exists, account exists, not exceeding the amount of shares.) will be handled in the
+        bot's async method.
+        """
+
+        # determines which account to use. and calculates the value.
+        if account_name == "tfa":
+            account_index = 1
+            value = num*token_val
+            value_no_tax = value
+            if value_no_tax > tax_free_trading_limit_dollars:  # the user cannot transfer more than the trading limit
+                return f"Amount exceeds trading limit\nLimit: {tax_free_trading_limit_dollars}\nYour amount(without tax): {value_no_tax}"
+        else:  # if its a taxed account, tax them
+            account_index = 0
+            value = tax_rate * (num*token_val)
+            value_no_tax = value/tax_rate
+            if value_no_tax > taxed_trading_limit_dollars:  # the user cannot transfer more than the trading limit
+                return f"Amount exceeds trading limit\nLimit: {taxed_trading_limit_dollars}\nYour amount(without tax): {value_no_tax}"
+
 
         # checks if the user's account balance is >= the value of the purchase
         if self.user["accounts"][account_index]["balance"] < value:
@@ -132,6 +198,7 @@ class User:
         # Adds the holdings to the account. if the holding does not exist, create it
         if token_name not in self.user["accounts"][account_index]["holdings"]:
             self.user["accounts"][account_index]["holdings"][token_name] = 0
+            self.user["accounts"][account_index]["num_holdings"] +=1
         self.user["accounts"][account_index]["holdings"][token_name]+=num
 
     def c_sell(self, account_name:str, num:float, token_val:int, token_name:str):
@@ -159,17 +226,36 @@ class User:
         # if the number of owned tokens reach 0, remove it
         if self.user["accounts"][account_index]["holdings"][token_name] == 0:
             del_dict_key(self.user["accounts"][account_index]["holdings"], key=token_name)
+            self.user["accounts"][account_index]["num_holdings"] -=1
 
     def wallet_modify(self): pass
 
     def bank_modify(self): pass
 
-    def transfer(self): pass
+    def transfer(self, amount:float, uid:int):
+        """
+        Transfers money from one user to another.
+
+        Transfers money from 1 wallet to the next. Withdraws the money from the user's wallet and deposits it into the
+        recipient's wallet. Has to be within the maximum transfer amount
+
+        The bot calling this function will determine needed.(positive integers only, who to ping etc)
+        """
+        if amount > max_transfer_limit: # cant  exceed the transfer limit.
+            return f"Transfer amount exceeds transfer limit.\nTransfer limit: {self.user['max transfer limit']}"
+
+        if amount > self.user["wallet"]:
+            return f"Insufficient funds to transfer.\n Your wallet: {self.user['wallet']}\nAmount to send: {amount}"
+
+        recipient = User(uid) # loads the recipient
+        self.user["wallet"] -=amount
+        recipient.user["wallet"] += amount
 
     def check_limit(self): pass
 
 if __name__ == '__main__':
     os.chdir("/home/loona/programming/Kryptonite-Bot/src")
+    load_constants()
 
     new = User(1)
 
@@ -181,18 +267,30 @@ if __name__ == '__main__':
     new.c_sell("tfa", num=1, token_val=kbx_value, token_name=kbx_name)
     new.save()"""
 
+
+
     # tesing buy
+    """
     kbx_value = 10
     kbx_name = "kbx"
     # tax free
     new.user["accounts"][1]["balance"] = 10
-    print(new.c_buy("tfa", 1, kbx_value, kbx_name))
+    print(new.c_buy("tfa", 1, 11000, kbx_name))
     # taxed
     new.user["accounts"][0]["balance"] = 10
-    print(new.c_buy("ntfa", 1, kbx_value, kbx_name))
+    print(new.c_buy("ntfa", 1, 520000, kbx_name))
 
 
     # sell
-    new.c_sell("tfa", 1, kbx_value, kbx_name)
+    #new.c_sell("tfa", 1, kbx_value, kbx_name)
 
     new.save()
+    """
+
+
+
+    # depositing and withdrawing
+    """
+    new.bank_deposit(10, "tfa")
+    new.save()
+    """

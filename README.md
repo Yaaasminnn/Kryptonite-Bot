@@ -6,7 +6,7 @@
 
  Users can buy, sell, monitor and trade currency/cryptocurrency.
 
-Can trade with eachother as well.
+Can transfer money among eachother as well.
 
 Cryptocurrencies are dynamically generated, and deleted
 
@@ -14,17 +14,21 @@ Users can view the history of the currencies on a graph. (predictions made by th
 
 
 # Todo:
-    
- Cache Crypto Values and other frequently checked data in RAM.
  
-Fluctuations and simulate the value changing every minute.
+Experiment with currencies and their stability with charts.
 
 Add in the discord bot boilerplate.
+    Asyncronize the backend
+    cache currencies and relaod constants every minute
 
-Asyncronize all the cryptocurrency calls
+front end(lots of embeds)
 
-Add in regular currency and user data
+Create webpages
+    show info on any currency
+    show info on a user?
 
-front end
+backup script(for the database)
+    have the pi use rsync and crontab?
+        backup to my pc? local? cloud?
 
 Release v1.0

@@ -122,4 +122,78 @@ trading:
 
 
 
-in the buy/sell methods or somn have a check to prevent the balance from exceeding the max value
+=============================================
+UID's are in order.
+
+buy/sells: (currency)
+  seperate functions.
+  increase or decrease marginally by the nunber of shares purchased
+    trade constant:
+      every x shares bought increases the value by 1 follar
+  increase/decrease the number of coins bought
+
+buy/sell (user)
+  calculate the value of the purchase
+    num_shares*stock_price(cached)
+    add or subtract those coins from the user
+    add or subtract the user's balance
+
+    verifies if the user has enough shares/money to trade the desired amount
+
+buy/sell (bot)
+  retrieves the value of the specified currency
+  just calls the other functions
+  max trades: 1000()
+  once per minute only
+  prints out the info
+
+  verifies if the account and currency exist
+
+  verifies if the user has traded a minute ago.
+
+
+transfer:
+  subtract ur amount of a cash
+  give it to someone else
+
+max user value. then either taxes or cant increase.
+
+put everything into kryptonite package
+  except db
+  main.py sets directory to src to access db?
+  index.js does the same?
+
+
+trade constant is refreshed every minute along with cache
+
+accounts:
+  tfa:
+    can deposit X daily. can trade a limited amount(max amount of dollars spent). max of 1000 shares. 1 purchase/min
+    no taxes
+
+  reg:
+    deposit 50k a day. only limit on trades is 1000 shares per purchase. 1 purchase a min
+      requency stored as a datetime object?
+        self.user.last_accessed for the datetime object
+      or we use discords thing
+    12% on each purchase
+
+
+js webpages:
+  just a base currency webpage and displays data from the database.
+  user data webpage
+  page showing all active currencies the user can choose from
+
+make this all async.
+method called every function that caches and refreshes constants
+make sure everything is >0
+also save after every function
+keep it within the max balance
+function to modify the constants. bot command
+buy/selling
+    for every X shares, we process the value of the stock.
+    then process the next X shares.
+
+caching:
+    do we use the cached value of a stock or the db value?
+    maybe upon load, we look for the currency in cache and replace value with the cached value.
