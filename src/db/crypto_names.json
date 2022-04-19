@@ -3,7 +3,6 @@
     "Mon",
     "Kuki",
     "Kook",
-    "Loona",
     "Bubby",
     "Stinky",
     "Tree",
@@ -39,7 +38,6 @@
     "L+Ratio",
     "W*man",
     "French",
-    "Mee6",
     "Serb",
     "Bosnian",
     "Anime",
@@ -65,8 +63,8 @@
     "Muta",
     "Straight",
     "English",
-    "Dyno",
-    "pp"
+    "pp",
+    "<ERROR: java.null.ptr.coin: Exception in line 47 char 12>"
   ],
   "suffixes": [
     "Bux",
@@ -90,6 +88,10 @@
     "Dubloons",
     "Rubles",
     "Marks",
-    "Feet"
+    "Feet",
+    "Emeralds",
+    "Jewels",
+    "Pesos",
+    "kooks"
   ]
 }
