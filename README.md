@@ -35,4 +35,7 @@ backup script(for the database)
     have the pi use rsync and crontab?
         backup to my pc? local? cloud?
 
+Experiment with the currencies:
+    mkae sure they are stable n stuff
+
 Release v1.0

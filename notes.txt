@@ -197,3 +197,8 @@ buy/selling
 caching:
     do we use the cached value of a stock or the db value?
     maybe upon load, we look for the currency in cache and replace value with the cached value.
+
+crypto testing:
+    jumps: when around 35/65, the value fluctuates by a LOT
+    spikes: make sure these spikes are not making the threshold 100+ or 0-
+    *Vmax_mag: not too bad, but can make the magnitude become 0. unintuitive. fix

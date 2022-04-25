@@ -2,7 +2,7 @@ import asyncio
 import os
 from random import randint, uniform, choice
 import datetime
-from json_utils import *
+from utils.json_utils import *
 crypto_cache = [] # the list of crypto currencies. we use this if someone wants to retrieve information on a currency
 trade_constant = 1/100_000 # how much the value fluctuates
 
@@ -216,7 +216,10 @@ class CryptoCurrency:
         self.spike()
 
         # modify Vmax_mag (adds +/-uniform(0.001, 0.01)). completely independant of the currency's value
-        self.currency["Vmax_mag"] += randint(-1, 1) * uniform(0.001, 0.01)
+        self.currency["Vmax_mag"] += randint(-1,1) * uniform(0.001, 0.01)
+        #if self.currency["Vmax_mag"] + Vmax_mag_fluctuation <=0.0: return
+        #else:
+         #   self.currency["Vmax_mag"] += Vmax_mag_fluctuation
 
     def simulate(self):
         """
@@ -225,11 +228,11 @@ class CryptoCurrency:
         Every minute, the cryptocurrency will be loaded and computed for change, saved and then cached.
         :return:
         """
-        self.compute()
+        self.compute() # runs the calculations to fluctuate it
 
-        self.save()
+        self.save() # saves the values to the database
 
-        self.cache()
+        self.cache() # caches it
 
         if self.currency["value"] <= self.currency["delete_value"]: # deletes the currency if it loses all value.
             self.delete()
@@ -276,18 +279,26 @@ class CryptoCurrency:
         if Vfluc_chance >= self.currency["threshold"]:
             # modifies the threshold. likely to decrease
             Tfluc_chance = choice((-1, -1, 1))  # has a bias to decrease when value increases
-            self.currency["threshold"] += Tfluc_chance * uniform(0, self.currency["Tmax_mag"])
+
+            # if the threshold dips too low, increase it tinstead. this prevents the threshold from plummeting, causing the value to skyrocket
+            T = self.currency["threshold"]
+            sign = (35-T)/(abs(35-T))
+            self.currency["threshold"] += sign * Tfluc_chance * uniform(0, self.currency["Tmax_mag"])
 
             # increases the value
-            self.currency["value"] += uniform(0, self.currency["Vmax_mag"])
+            self.currency["value"] += abs(uniform(0, self.currency["Vmax_mag"]))
 
         else:
             # modifies the threshold. likely to increase
             Tfluc_chance = choice((-1, 1, 1)) # has a bias to increase when value decreases
-            self.currency["threshold"] += Tfluc_chance * uniform(0, self.currency["Tmax_mag"])
+
+            # if the threshold gets too high, decrease it.keeps the threshold from skyrocketing causing the value to plummet
+            T = self.currency["threshold"]
+            sign = (65 -T)/ (abs(65-T))
+            self.currency["threshold"] += sign * Tfluc_chance * uniform(0, self.currency["Tmax_mag"])
 
             # decrease the value
-            self.currency["value"] += -uniform(0, self.currency["Vmax_mag"])
+            self.currency["value"] -= abs(uniform(0, self.currency["Vmax_mag"]))
 
     def display_history(self): return
 
@@ -320,9 +331,9 @@ if __name__ == '__main__':
     db = load_json("db/crypto_currencies.json")
 
     # adding currencies
-    """
+
     new_crypto = CryptoCurrency()
-    print(new_crypto.currency)"""
+    print(new_crypto.currency)
 
     #deleting currencies
     """
@@ -332,17 +343,18 @@ if __name__ == '__main__':
     """
 
     # caching currencies
-    #"""
+    """
     new = CryptoCurrency()
     new.cache()
     print(crypto_cache)
     #print(new.currency["value"], new.currency["threshold"], new.currency["Vmax_mag"])
     #new.simulate()
     #print(new.currency["value"], new.currency["threshold"], new.currency["Vmax_mag"])
-    #"""
+    """
 
     #prints the cache
     """cache_dict = {
         "crypt_cache": crypto_cache
     }
     print(json.dumps(cache_dict, indent=4, sort_keys=False))"""
+
