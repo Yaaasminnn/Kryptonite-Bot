@@ -37,15 +37,15 @@ class CryptoCurrency:
             self.currency["name"] = CryptoCurrency.regen_name() # uses a generator to generate a random name
             self.currency["UID"] = 0
             self.currency["total_shares"] = 0
-            self.currency["delete_value"] = 0.0
+            self.currency["delete_value"] = 0.0 # normally 0
 
-            self.currency["value"] = uniform(0.5, 50.0)
+            self.currency["value"] = uniform(0.5, 50.0) # normally 0.5 -> 50
             self.currency["Vmax_mag"] = max(
                 0.005,
-                uniform(0.2, 1.0)*(self.currency["value"]/20)
+                uniform(0.004, 0.0013)*self.currency["value"]
             )
 
-            self.currency["threshold"] = 50.0
+            self.currency["threshold"] = 50.0 # normally 50.0
             self.currency["Tmax_mag"] = 1.0
 
             self.currency["values"] = []
@@ -53,8 +53,6 @@ class CryptoCurrency:
                 "date": self.currency["creation date"],
                 "value": self.currency["value"]
             })
-
-            # simulate the currency?
 
             # save the currency.
             self.save()
@@ -215,11 +213,7 @@ class CryptoCurrency:
 
         self.spike()
 
-        # modify Vmax_mag (adds +/-uniform(0.001, 0.01)). completely independant of the currency's value
-        self.currency["Vmax_mag"] += randint(-1,1) * uniform(0.001, 0.01)
-        #if self.currency["Vmax_mag"] + Vmax_mag_fluctuation <=0.0: return
-        #else:
-         #   self.currency["Vmax_mag"] += Vmax_mag_fluctuation
+        self.Vmax_mag_fluctuate()
 
     def simulate(self):
         """
@@ -253,8 +247,103 @@ class CryptoCurrency:
         now = str(datetime.datetime.now().replace(second=0, microsecond=0))
         q1,q2,q3,q4 = "-03-31 00:00","-06-30 00:00","-09-31 00:00","-12-31 00:00" # the quarter datetimes
         if ((q1 in now) or (q2 in now) or (q3 in now) or (q4 in now)):
-            self.currency["threshold"] += choice([-1, 1]) * 30
-            print("spiked")
+            self.currency["threshold"] += (choice([-1, 1]) * 30) + 50
+
+        # daily spike
+        # uses rng and not a datetime object because this can happen at any point in the day.
+        spike_chance = randint(0,1440) # rolls a random. 1440 mins/day so this will spike daily
+        if spike_chance == 1440: self.currency["threshold"] = (choice((-1,1)) * 10) + 50
+
+    def Vmax_mag_fluctuate(self):
+        """
+        Fluctuates Vmax_mag.
+
+        The Vmax_mag is the maximum magnitude the value can fluctuate by every cycle. the Vmax_mag's initial value
+        is based on the value of the currency, however, it's fluctuation is completely independent.
+
+        The only limitation on Vmax_mag is that it cannot equal 0. this causes all value manipulations to inverse and
+        adds unecessary complexity and is harder to predict.
+
+        We check if the Vmax_mag is below a certain limit, if so, we only allow increases of vmax_mag. otherwise,
+        the sign is random.
+        """
+
+        if self.currency["Vmax_mag"] <= 0.02: # 0.02 is chosen as it is the twice the maximum it can increase by.
+            # 0.001-0.01 is arbitrary since Vmax_mag's value is unimportant as long as its not too large or negative
+            self.currency["Vmax_mag"] += 1 * uniform(0.001, 0.01)
+            return
+        else:
+            self.currency["Vmax_mag"] += randint(-1,1) * uniform(0.001, 0.01) # normally 0.001, 0.01
+
+    def thresh_fluctuate(self, val_increased:bool):
+        """
+        Modifies the threshold.
+
+        The threshold is modified whenever the value is modified. usually in the opposite direction.
+        This is done so that when the currency increases, it appears to have a large spike instead of pure randomness.
+
+        For Example, when Value is increased, the threshold is more likely to decrease and vice versa.
+        However, to prevent the threshold from going too high or too low, it flips direction when >65 or <35.
+
+        We solve for Tfluc_chance and then sign. we take those values and substitute them into the equation to
+        determine the value of fluctuate.
+        Example:
+            when increasing value, threshold decreases
+            Tfluc_chance is more likely to be -1
+            sign returns either -1 or 1.                 -1 if T<35; 1 if T>35.
+            When T>35 and value increases, Tfluc_chance is likely -1. we want to decrease the threshold.
+            so sign needs to be +1 to do so.
+
+        """
+        T = self.currency["threshold"] # threshold value. stored as a variable for typing convenience and readibility
+
+        if val_increased:
+            Tfluc_chance = choice((-1,-1,1)) # this is more likely to return -1 which decreases the threshold
+
+            # The expression for sign below returns -1 or 1.
+            # -1 for T<35 and +1 for T>35.
+            # It is intended to determine the directon of the change in threshold.
+            try:sign = -(35-T)/abs(35-T)
+            except ZeroDivisionError: sign = choice((-1,1))
+
+        else:
+            Tfluc_chance = choice((1,1,-1)) # this is more likely to return 1 which increases the threshold
+
+            # The expression for sign below returns -1 or 1.
+            # +1 for T<65 and -1 for T>65.
+            # It is intended to determine the direction of the change in threshold.
+            try: sign = (65-T)/abs(65-T)
+            except ZeroDivisionError: sign = choice((-1,1))
+
+        self.currency["threshold"] += sign * Tfluc_chance * uniform(0, self.currency["Tmax_mag"])
+
+    def value_fluctuate(self):
+        """
+        Fluctuates the value.
+
+        The value is recalculated using a percentage of the Vmax_mag value. However, this alone makes its graph rather
+        boring. and when spikes happen and the threshold is haywire, the value increases/decreases accordingly, however,
+        its quite linear while charts of stocks and coins seem to skyrocket. To combat this, when the threshold wanders
+        outside of the accepted range[35,65], the fluctuation it experience is multiplied.
+
+        if the threshold reaches 1 of the bounds(35 or 65), the value will be modified by a factor of 4. and for every
+        1 more in the respective direction, the modification will be decreased by 0.1.
+        Example:
+            T = 35 or 65; factor = 4
+            T = 30 or 70; factor = 3.5
+            T = 25 or 75; factor = 3
+            T = 20 or 80; factor = 2.5
+            T = 15 or 85; factor = 2
+            T = 10 or 90; factor = 1.5
+            T = 5 or 95; factor = 1
+            T = 0 or 100; factor = 0.5
+        :return:
+        """
+        T = self.currency["threshold"]
+        if T > 65: # (-((T-65)/10 + 4) * uniform(0, self.currency["Vmax_mag"])
+            self.currency["value"] -= uniform(0, self.currency["Vmax_mag"]) + (self.currency["value"]/100) # this is a percent method. adjust in morning
+        if T <= 35: # (((T-35)/10)+4)
+            self.currency["value"] += uniform(0, self.currency["Vmax_mag"]) + (self.currency["value"]/100)
 
     def fluctuate(self):
         """
@@ -274,31 +363,21 @@ class CryptoCurrency:
             value is garunteed to increase if the random num >= threshold.
         """
         Vfluc_chance = randint(0, 100)
-        #print("did it fluctuate?", Vfluc_chance, self.currency["threshold"])
 
         if Vfluc_chance >= self.currency["threshold"]:
-            # modifies the threshold. likely to decrease
-            Tfluc_chance = choice((-1, -1, 1))  # has a bias to decrease when value increases
 
-            # if the threshold dips too low, increase it tinstead. this prevents the threshold from plummeting, causing the value to skyrocket
-            T = self.currency["threshold"]
-            sign = (35-T)/(abs(35-T))
-            self.currency["threshold"] += sign * Tfluc_chance * uniform(0, self.currency["Tmax_mag"])
+            self.thresh_fluctuate(val_increased=True) # changes the threshold
 
             # increases the value
-            self.currency["value"] += abs(uniform(0, self.currency["Vmax_mag"]))
+            #self.currency["value"] += uniform(0, self.currency["Vmax_mag"])
 
         else:
-            # modifies the threshold. likely to increase
-            Tfluc_chance = choice((-1, 1, 1)) # has a bias to increase when value decreases
-
-            # if the threshold gets too high, decrease it.keeps the threshold from skyrocketing causing the value to plummet
-            T = self.currency["threshold"]
-            sign = (65 -T)/ (abs(65-T))
-            self.currency["threshold"] += sign * Tfluc_chance * uniform(0, self.currency["Tmax_mag"])
+            self.thresh_fluctuate(val_increased=False) # changes the threshold
 
             # decrease the value
-            self.currency["value"] -= abs(uniform(0, self.currency["Vmax_mag"]))
+            #self.currency["value"] -= uniform(0, self.currency["Vmax_mag"])
+
+        self.value_fluctuate()
 
     def display_history(self): return
 

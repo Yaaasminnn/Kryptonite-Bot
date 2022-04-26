@@ -14,7 +14,7 @@ objective:
 
 fields = ["time(min)", "value", "Vmax_mag", "Tmax_mag", "threshold"] # the fields used in the csv file
 
-def simulate_notrade(time_period=43200):
+def simulate_notrade(time_period=10080):
     """
     Over the course of a month, simulate the currency.
 
@@ -40,7 +40,7 @@ def simulate_notrade(time_period=43200):
                 coin.currency["threshold"]
             ])
 
-            print(f"Iteration: {i}    | |    Value: {coin.currency['value']}")
+            print(f"Iteration: {i}    ||    Value: {coin.currency['value']}")
         except IndexError: print("Coin value crashed");break
 
     save_to_file(filename, rows)
