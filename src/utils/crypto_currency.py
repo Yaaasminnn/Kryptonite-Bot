@@ -252,7 +252,7 @@ class CryptoCurrency:
         # daily spike
         # uses rng and not a datetime object because this can happen at any point in the day.
         spike_chance = randint(0,1440) # rolls a random. 1440 mins/day so this will spike daily
-        if spike_chance == 1440: self.currency["threshold"] = (choice((-1,1)) * 10) + 50
+        if spike_chance == 1440: self.currency["threshold"] = 50 #(choice((-1,1)) * 10) + 50
 
     def Vmax_mag_fluctuate(self):
         """
@@ -315,9 +315,9 @@ class CryptoCurrency:
             try: sign = (65-T)/abs(65-T)
             except ZeroDivisionError: sign = choice((-1,1))
 
-        self.currency["threshold"] += sign * Tfluc_chance * uniform(0, self.currency["Tmax_mag"])
+        self.currency["threshold"] += sign * Tfluc_chance  * uniform(0, self.currency["Tmax_mag"])
 
-    def value_fluctuate(self):
+    def value_fluctuate(self, val_increased:bool):
         """
         Fluctuates the value.
 
@@ -339,11 +339,40 @@ class CryptoCurrency:
             T = 0 or 100; factor = 0.5
         :return:
         """
+        """
+        Fluctuates the value.
+        
+        The value can fluctuate based on a ranged determined by Vmax_mag or based on a percentage of its value.
+        When fluctuating based on percentage, it is a spike since the percentage scales with the value.
+        When not on percentage, the value does not spike at all as the Vmax_mag does not scale with the value 
+        Which way it fluctuates is determined by the threshold. If the threshold is within bounds, it goes off 
+        percentage and when it is out of bounds, it is based off Vmax_mag.
+        
+        The final equation to fluctuate value is determined by several factors:
+            The base_factor is the amount the currency will always increase by. it is based off Vmax_mag
+            the percent_factor is the amount the currency will increase by when increasing by percentage.
+            If the value of the currency is increasing this cycle, sign ==1 and -1 if it is decreasing.
+            
+            the bounds_factor determines if the currency will fluctuate based off percentage. it outputs either 0 or 1.
+            the bound_factor's value is multiplied by the percent_factor. when the value is to spike, bounds_factor == 1
+            and otherwise, 0. The bounds factor will be undefined at the bounds(35, 65) so in those cases, it will be
+            set to 1 so that it may spike. 
+            
+        This causes value to always increase by a small amount, but if spiking, also by a percentage.
+        """
         T = self.currency["threshold"]
-        if T > 65: # (-((T-65)/10 + 4) * uniform(0, self.currency["Vmax_mag"])
-            self.currency["value"] -= uniform(0, self.currency["Vmax_mag"]) + (self.currency["value"]/100) # this is a percent method. adjust in morning
-        if T <= 35: # (((T-35)/10)+4)
-            self.currency["value"] += uniform(0, self.currency["Vmax_mag"]) + (self.currency["value"]/100)
+        percent = self.currency["value"]/100
+        if val_increased: # (-((T-65)/10 + 4) * uniform(0, self.currency["Vmax_mag"])
+            sign =1
+        else: # (((T-35)/10)+4)
+            sign =-1
+
+        base_factor = uniform(0, self.currency["Vmax_mag"]) # the normal amount the currency increases by
+        try: bounds_factor = max(0, -abs((T**2) - (100*T) + 2356)/((T**2) - (100*T) + 2356)) # bounds at (38, 62) so there is a balance between stability and spiking near bounds
+        except: bounds_factor = 0 # if the bounds factor is undefined, we just set it as 0 so it behaves normally
+        percent_factor = uniform(0, 2*percent)/(abs(T-50) + 1) # ranges from 0 -> 2% change. gets smaller as it gets farther from 50 and is not undefined at 50
+
+        self.currency["value"] += sign * (base_factor + (bounds_factor * percent_factor))
 
     def fluctuate(self):
         """
@@ -363,21 +392,24 @@ class CryptoCurrency:
             value is garunteed to increase if the random num >= threshold.
         """
         Vfluc_chance = randint(0, 100)
+        val_increased:bool
 
         if Vfluc_chance >= self.currency["threshold"]:
 
             self.thresh_fluctuate(val_increased=True) # changes the threshold
+            val_increased = True
 
             # increases the value
             #self.currency["value"] += uniform(0, self.currency["Vmax_mag"])
 
         else:
             self.thresh_fluctuate(val_increased=False) # changes the threshold
+            val_increased = False
 
             # decrease the value
             #self.currency["value"] -= uniform(0, self.currency["Vmax_mag"])
 
-        self.value_fluctuate()
+        self.value_fluctuate(val_increased=val_increased)
 
     def display_history(self): return
 
