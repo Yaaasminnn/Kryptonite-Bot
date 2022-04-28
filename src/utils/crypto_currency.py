@@ -2,7 +2,8 @@ import asyncio
 import os
 from random import randint, uniform, choice
 import datetime
-from utils.json_utils import *
+from src.utils.json_utils import *
+from src.utils.math_funcs import *
 crypto_cache = [] # the list of crypto currencies. we use this if someone wants to retrieve information on a currency
 trade_constant = 1/100_000 # how much the value fluctuates
 
@@ -45,7 +46,7 @@ class CryptoCurrency:
                 uniform(0.004, 0.0013)*self.currency["value"]
             )
 
-            self.currency["threshold"] = 50.0 # normally 50.0
+            self.currency["threshold"] = 35.0 # normally 50.0
             self.currency["Tmax_mag"] = 1.0
 
             self.currency["values"] = []
@@ -362,15 +363,20 @@ class CryptoCurrency:
         """
         T = self.currency["threshold"]
         percent = self.currency["value"]/100
-        if val_increased: # (-((T-65)/10 + 4) * uniform(0, self.currency["Vmax_mag"])
-            sign =1
-        else: # (((T-35)/10)+4)
-            sign =-1
 
         base_factor = uniform(0, self.currency["Vmax_mag"]) # the normal amount the currency increases by
-        try: bounds_factor = max(0, -abs((T**2) - (100*T) + 2356)/((T**2) - (100*T) + 2356)) # bounds at (38, 62) so there is a balance between stability and spiking near bounds
+        # value_factor = # add this in. when the value is too small, the value only increases by percent?
+        try: bounds_factor = max(0, -abs((T**2) - (100*T) + 2275)/((T**2) - (100*T) + 2275)) # outside the bounds, return 1. within bounds, return 0
         except: bounds_factor = 0 # if the bounds factor is undefined, we just set it as 0 so it behaves normally
-        percent_factor = uniform(0, 2*percent)/(abs(T-50) + 1) # ranges from 0 -> 2% change. gets smaller as it gets farther from 50 and is not undefined at 50
+        percent_factor = uniform(0, percent/500_000) * gaussian_function(x=T, a=10_000, b=50, c=4) # ranges from 0->0.0002 times the value.
+
+        if val_increased: sign =1
+        else:
+            sign =-1
+            # if it crashes too easily, it will become reliant on this stage and a low value will be typical
+            if self.currency["value"] < 2.5: # tp prevent currencies from dying too easily, it will only fluctuate by a small percentage at dangerously low values
+                self.currency["value"] += sign * uniform(0, percent) # + (bounds_factor * base_factor)
+                return
 
         self.currency["value"] += sign * (base_factor + (bounds_factor * percent_factor))
 
