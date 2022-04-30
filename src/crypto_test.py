@@ -1,4 +1,6 @@
 import csv
+import datetime
+
 from utils.crypto_currency import *
 import utils.json_utils
 """
@@ -66,6 +68,10 @@ if __name__ == '__main__':
         coin.delete()
 
     new = CryptoCurrency()
+    print(crypto_cache)
+    #print(new.currency)
+    new.simulate()
+    #print(new.currency)
+    print(crypto_cache)
 
-
-    simulate_notrade()
+    #simulate_notrade(43200)

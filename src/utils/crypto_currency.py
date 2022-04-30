@@ -4,7 +4,7 @@ from random import randint, uniform, choice
 import datetime
 from src.utils.json_utils import *
 from src.utils.math_funcs import *
-crypto_cache = [] # the list of crypto currencies. we use this if someone wants to retrieve information on a currency
+crypto_cache = [] # the list of crypto currencies. we use this if we wants to retrieve information on a currency
 trade_constant = 1/100_000 # how much the value fluctuates
 
 class CryptoCurrency:
@@ -43,7 +43,7 @@ class CryptoCurrency:
             self.currency["value"] = uniform(0.5, 50.0) # normally 0.5 -> 50
             self.currency["Vmax_mag"] = max(
                 0.005,
-                uniform(0.004, 0.0013)*self.currency["value"]
+                uniform(0.004, 0.00013)*self.currency["value"]
             )
 
             self.currency["threshold"] = 35.0 # normally 50.0
@@ -156,14 +156,13 @@ class CryptoCurrency:
 
         #del currency["Vmax_mag"], currency["Tmax_mag"], currency["threshold"] # deletes unecessary values
         #print(self.currency)
-        #currency = del_dict_keys(self.currency, "Vmax_mag", "Tmax_mag", "threshold")
+        #currency = del_dict_keys(self.currency, ["Vmax_mag", "Tmax_mag", "threshold"])
 
         # deletes all instances of older values.
         values_len = len(self.currency["values"])
         for i in range(values_len):
             if ((values_len-i)>168 and i!=0):
                 del_dict_key(self.currency, "values", i)
-                #del currency["values"][i]
 
         # searches for any previous records of the dict in the cache and overwrites it
         cache_len = len(crypto_cache)
@@ -224,6 +223,9 @@ class CryptoCurrency:
         :return:
         """
         self.compute() # runs the calculations to fluctuate it
+
+        if datetime.datetime.now().minute == 0:
+            self.history_append() # adds to history of values
 
         self.save() # saves the values to the database
 
@@ -365,7 +367,6 @@ class CryptoCurrency:
         percent = self.currency["value"]/100
 
         base_factor = uniform(0, self.currency["Vmax_mag"]) # the normal amount the currency increases by
-        # value_factor = # add this in. when the value is too small, the value only increases by percent?
         try: bounds_factor = max(0, -abs((T**2) - (100*T) + 2275)/((T**2) - (100*T) + 2275)) # outside the bounds, return 1. within bounds, return 0
         except: bounds_factor = 0 # if the bounds factor is undefined, we just set it as 0 so it behaves normally
         percent_factor = uniform(0, percent/500_000) * gaussian_function(x=T, a=10_000, b=50, c=4) # ranges from 0->0.0002 times the value.
@@ -373,9 +374,8 @@ class CryptoCurrency:
         if val_increased: sign =1
         else:
             sign =-1
-            # if it crashes too easily, it will become reliant on this stage and a low value will be typical
-            if self.currency["value"] < 2.5: # tp prevent currencies from dying too easily, it will only fluctuate by a small percentage at dangerously low values
-                self.currency["value"] += sign * uniform(0, percent) # + (bounds_factor * base_factor)
+            if self.currency["value"] < 2.5: # tp prevent currencies from dying too easily, it will only fluctuate by a small amount at dangerously low values
+                self.currency["value"] += sign * uniform(0.05,0.1)
                 return
 
         self.currency["value"] += sign * (base_factor + (bounds_factor * percent_factor))
@@ -440,6 +440,20 @@ class CryptoCurrency:
         trade constant to determine the magnitude the currency value will decrease by
         """
         self.currency["value"]-=num*trade_constant
+
+    def history_append(self):
+        """
+        Adds the current value to the history of values.
+
+        Is called every hour on the frst minute. Example: 01:00:00. at 1:00 am
+        """
+        self.currency["values"].append( # make sure date is casted to str as JSON cant store datetime objects
+            {
+                "date": str(datetime.datetime.now().replace(microsecond=0, second=0)),
+                "value": self.currency["value"]
+            }
+        )
+
 
 if __name__ == '__main__':
     os.chdir("/home/loona/programming/Kryptonite-Bot/src")
