@@ -163,9 +163,9 @@ class User:
         When buying the account's balance in decreased by the number of shares * the value of each token multiplied by
         the tax rate.
 
-        First determines which account you are using. Tax free(tfa) or regular(ntfa). from there it determines the value
-        of the purchase with and without taxes as well as the tax rates. If the value of the purchase without tax
-        exceeds the trading limit(dollars), the order will be cancelled. also, if the value(tax included) is greater
+        First determines which account you are using. Tax free(tfa) or regular(ntfa). from there it determines the volume
+        of the purchase with and without taxes as well as the tax rates. If the volume of the purchase without tax
+        exceeds the trading limit(dollars), the order will be cancelled. also, if the volume(tax included) is greater
         than what the user has in their account, it will be cancelled as well. If a transfer goes through, deduct the
         money and add the holding to the account.
 
@@ -176,24 +176,24 @@ class User:
         # determines which account to use. and calculates the value.
         if account_name == "tfa":
             account_index = 1
-            value = num*token_val
-            value_no_tax = value
-            if value_no_tax > tax_free_trading_limit_dollars:  # the user cannot transfer more than the trading limit
-                return f"Amount exceeds trading limit\nLimit: {tax_free_trading_limit_dollars}\nYour amount(without tax): {value_no_tax}"
+            volume = num*token_val
+            volume_no_tax = volume
+            if volume_no_tax > tax_free_trading_limit_dollars:  # the user cannot transfer more than the trading limit
+                return f"Amount exceeds trading limit\nLimit: {tax_free_trading_limit_dollars}\nYour amount(without tax): {volume_no_tax}"
         else:  # if its a taxed account, tax them
             account_index = 0
-            value = tax_rate * (num*token_val)
-            value_no_tax = value/tax_rate
-            if value_no_tax > taxed_trading_limit_dollars:  # the user cannot transfer more than the trading limit
-                return f"Amount exceeds trading limit\nLimit: {taxed_trading_limit_dollars}\nYour amount(without tax): {value_no_tax}"
+            volume = tax_rate * (num*token_val) # the volume is calculated with tax
+            volume_no_tax = volume/tax_rate
+            if volume_no_tax > taxed_trading_limit_dollars:  # the user cannot transfer more than the trading limit
+                return f"Amount exceeds trading limit\nLimit: {taxed_trading_limit_dollars}\nYour amount(without tax): {volume_no_tax}"
 
 
-        # checks if the user's account balance is >= the value of the purchase
-        if self.user["accounts"][account_index]["balance"] < value:
-            return f"Insufficient balance.\nBalance: {self.user['accounts'][account_index]['balance']}\nNeeded: {value}"
+        # checks if the user's account balance is >= the volume of the purchase
+        if self.user["accounts"][account_index]["balance"] < volume:
+            return f"Insufficient balance.\nBalance: {self.user['accounts'][account_index]['balance']}\nNeeded: {volume}"
 
-        # subtracts value from the bank balance
-        self.user["accounts"][account_index]["balance"] -= value
+        # subtracts volume from the bank balance
+        self.user["accounts"][account_index]["balance"] -= volume
 
         # Adds the holdings to the account. if the holding does not exist, create it
         if token_name not in self.user["accounts"][account_index]["holdings"]:
@@ -206,7 +206,7 @@ class User:
         Sell function. Modifies the user's account balance
 
         When selling, the account's balance is increased by the num_shares*token_val.
-        additionally, the holding is decreased. if the holding value reaches 0, the holding is released.
+        additionally, the holding is decreased. if the holding volume reaches 0, the holding is deleted.
         """
         # determines which account to use.
         if account_name == "tfa": account_index = 1
