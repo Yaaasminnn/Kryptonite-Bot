@@ -36,15 +36,15 @@ def simulate_notrade(time_period=10080):
 
             rows.append([ # appends the values to the rows
                 i,
-                coin.currency["value"],
-                coin.currency["Vmax_mag"],
-                coin.currency["Tmax_mag"],
-                coin.currency["threshold"],
-                coin.currency["m_cap"],
-                coin.currency["num_shares"]
+                coin.value,
+                coin.Vmax_mag,
+                coin.Tmax_mag,
+                coin.threshold,
+                coin.market_cap,
+                coin.total_shares
             ])
 
-            print(f"Iteration: {i}    ||    Value: {coin.currency['value']}")
+            print(f"Iteration: {i}    ||    Value: {coin.value}")
         except IndexError: print("Coin value crashed");break
 
     save_to_file(filename, rows)
@@ -61,37 +61,38 @@ def simulate_with_trade(time_period=10080):
 
     for i in range(time_period):
 
-        # trades
-        if randint(0,1)==1: coin_buy(randint(0,20), 0)
-        if randint(0,1)==1: coin_sell(randint(0,20), 0)
-
-        # simulates the currency
-        db = utils.json_utils.load_json("db/crypto_currencies.json") # loads all currencies
         try:
-            coin = CryptoCurrency(db["currencies"][0])
+            # trades
+            if randint(0,1)==1: coin_buy(randint(0,20), 0)
+            if randint(0,1)==1: coin_sell(randint(0,20), 0)
+
+            # simulates the currency
+            db = utils.json_utils.load_json("db/crypto_currencies.json") # loads all currencies
+
+            coin = CryptoCurrency(crypto_cache[0])
             coin.simulate()
 
             rows.append([  # appends the values to the rows
                 i,
-                coin.currency["value"],
-                coin.currency["Vmax_mag"],
-                coin.currency["Tmax_mag"],
-                coin.currency["threshold"],
-                coin.currency["m_cap"],
-                coin.currency["num_shares"]
+                coin.value,
+                coin.Vmax_mag,
+                coin.Tmax_mag,
+                coin.threshold,
+                coin.market_cap,
+                coin.total_shares
             ])
-            print(f"Iteration: {i}    ||    Value: {coin.currency['value']}")
+            print(f"Iteration: {i}    ||    Value: {coin.value}")
         except IndexError: print("Coin value crashed"); break
 
     save_to_file(filename, rows)
 
 def coin_buy(shares:int, cache_index:int):
     coin = CryptoCurrency(crypto_cache[cache_index])
-    coin.buy(coin.currency["value"] * shares)
+    coin.buy(coin.value * shares)
 
 def coin_sell(shares:int, cache_index:int):
     coin = CryptoCurrency(crypto_cache[cache_index])
-    coin.sell(coin.currency["value"] * shares)
+    coin.sell(coin.value * shares)
 
 def save_to_file(filename, rows):
     with open(f"tests/{filename}", "w") as file:
@@ -108,19 +109,17 @@ if __name__ == '__main__':
     db = utils.json_utils.load_json("db/crypto_currencies.json")
 
     for dict in db["currencies"]: # deletes all existing currencies
-        print(dict)
+        #print(dict)
         coin = CryptoCurrency(dict)
-        coin.delete(db)
+        coin.delete()
     #update_json("db/crypto_currencies.json", db)
 
     new = CryptoCurrency()
-    print(new.currency)
-    print(new.currency["value"])
+    """print(new)
+    print(new.value)
     crypto_cache[0]["value"] = 1
-    print(crypto_cache)
-    print(db["currencies"][0])
-    #n1 = CryptoCurrency(db["currencies"][0])
-    #print(n1.currency)
-    #print(n1.currency["value"])
+    n1 = CryptoCurrency(crypto_cache[0])
+    print(n1)
+    print(n1.value)"""
 
-    #simulate_notrade(43200)
+    simulate_with_trade(43200)

@@ -5,7 +5,6 @@ import datetime
 from src.utils.json_utils import *
 from src.utils.math_funcs import *
 crypto_cache = [] # the list of crypto currencies. we use this if we wants to retrieve information on a currency
-trade_constant = 1/100_000 # how much the value fluctuates
 
 class CryptoCurrency:
     def __init__(self, currency:dict=None):
@@ -34,28 +33,27 @@ class CryptoCurrency:
         if currency is None: # if there was no argument given, it creates a new currency
 
             # creates the CryptoCurrency dict
-            self.currency = {}
+            #self.currency = {}
 
-            self.currency["creation date"] = str(datetime.datetime.now().replace(minute=0,second=0, microsecond=0))
-            self.currency["name"] = CryptoCurrency.regen_name() # uses a generator to generate a random name
-            self.currency["UID"] = 0
-            self.currency["total_shares"] = 0
-            self.currency["delete_value"] = 0.0 # normally 0
+            self.creation_date = str(datetime.datetime.now().replace(minute=0,second=0, microsecond=0))
+            self.name = CryptoCurrency.regen_name() # uses a generator to generate a random name
+            self.uid = 0
+            self.delete_value = 0.0 # normally 0
 
-            self.currency["value"] = uniform(0.5, 50.0) # normally 0.5 -> 50
-            self.currency["Vmax_mag"] = max(
+            self.value = uniform(0.5, 50.0) # normally 0.5 -> 50
+            self.Vmax_mag = max(
                 0.005,
-                uniform(0.004, 0.00013)*self.currency["value"]
+                uniform(0.004, 0.00013)*self.value
             )
-            self.currency["num_shares"] = randint(9000, 100_000)
+            self.total_shares = randint(9000, 100_000)
 
-            self.currency["threshold"] = 35.0 # normally 50.0
-            self.currency["Tmax_mag"] = 1.0
+            self.threshold = 35.0 # normally 50.0
+            self.Tmax_mag = 1.0
 
-            self.currency["values"] = []
-            self.currency["values"].append({
-                "date": self.currency["creation date"],
-                "value": self.currency["value"]
+            self.values = []
+            self.values.append({
+                "date": self.creation_date,
+                "value": self.value
             })
 
             # save the currency.
@@ -65,22 +63,17 @@ class CryptoCurrency:
             self.cache()
 
         else: # otherwise loads up the currency from the dict given
-            self.currency = currency # we only load in the dict as it makes writing changes easier
+            self.dict_to_obj(currency) # loads all the currency data
 
-            # sets the value to the cached value.
-            for count, i in enumerate(crypto_cache):
-                print(count, i)
-                if crypto_cache[count]["name"] == self.currency["name"]:
-                    print("h")
-                    self.currency = i
+            # saves.
+            self.save()
 
             # cache the currency
             self.cache()
 
     @property
     def market_cap(self): # the market is the total value of all shares
-        self.currency["m_cap"] = self.currency["value"] * self.currency["num_shares"]
-        return self.currency["value"] * self.currency["num_shares"]
+        return self.value * self.total_shares
 
     @staticmethod
     def name_generator()->str:
@@ -128,6 +121,45 @@ class CryptoCurrency:
             if unique: break
         return name
 
+    def dict_to_obj(self, currency):
+        """
+        transforms a dict to an object.
+
+        Will be used upon init when a dictionary is given.
+        """
+        self.name = currency["name"]
+        self.creation_date = currency["creation_date"]
+        self.uid = currency["uid"]
+        #self.total_shares = currency["total_shares"]
+        self.delete_value = currency["delete_value"]
+        self.value = currency["value"]
+        self.Vmax_mag = currency["Vmax_mag"]
+        self.total_shares = currency["total_shares"]
+        self.threshold = currency["threshold"]
+        self.Tmax_mag = currency["Tmax_mag"]
+        self.values = currency["values"]
+
+    def obj_to_dict(self)->dict:
+        """
+        transforms an object to a dictionary type.
+
+        functions such as caching and saving require dicts, so a function was made.
+        """
+        currency = {}
+        currency["name"] = self.name
+        currency["creation_date"] = self.creation_date
+        currency["uid"] = self.uid
+        #currency["total_shares"] = self.total_shares
+        currency["delete_value"] = self.delete_value
+        currency["value"] = self.value
+        currency["Vmax_mag"] = self.Vmax_mag
+        currency["total_shares"] = self.total_shares
+        currency["threshold"] = self.threshold
+        currency["Tmax_mag"] = self.Tmax_mag
+        currency["values"] = self.values
+
+        return currency
+
     def save(self):
         """
             Writes data to the database.
@@ -140,14 +172,16 @@ class CryptoCurrency:
         """
         db = load_json("db/crypto_currencies.json") # loads up the db containing all currencies
 
+        currency = self.obj_to_dict() # transforms the object into a dict to be used
+
         for i in range(len(db["currencies"])): # cycles through all of them to find the matching one by name
-            if db["currencies"][i]["name"] == self.currency["name"]:
-                db["currencies"][i] = self.currency
+            if db["currencies"][i]["name"] == currency["name"]:
+                db["currencies"][i] = currency
                 update_json("db/crypto_currencies.json", db)
                 return
 
         # if the currency is not found, add it.
-        db["currencies"].append(self.currency)
+        db["currencies"].append(currency)
         db["count"] += 1 # updates the number of crypto currencies stored in the database
         update_json("db/crypto_currencies.json", db)
         return
@@ -169,21 +203,23 @@ class CryptoCurrency:
             initial value, we can delete it and append the dict to the crypto_cache array.
         """
 
+        currency = self.obj_to_dict() # transforms the object to a dict
+
         # deletes all instances of older values.
-        values_len = len(self.currency["values"])
+        values_len = len(currency["values"])
         for i in range(values_len):
             if ((values_len-i)>168 and i!=0):
-                del_dict_key(self.currency, "values", i)
+                del_dict_key(currency, "values", i)
 
         # searches for any previous records of the dict in the cache and overwrites it
         cache_len = len(crypto_cache)
         for i in range(cache_len-1, -1, -1): # iterates through the list backwards.
-            if crypto_cache[i]["name"] == self.currency["name"]:
+            if crypto_cache[i]["name"] == currency["name"]:
                 del crypto_cache[i]
 
-        crypto_cache.append(self.currency) # appends the dict to cache.
+        crypto_cache.append(currency) # appends the dict to cache.
 
-    def delete(self, db):
+    def delete(self):
         """
             Deletes a crypto currency.
 
@@ -191,11 +227,11 @@ class CryptoCurrency:
 
             Looks through the crypto currencies json and deletes the right entry as well as decrement the counter.
         """
-        #db = load_json("db/crypto_currencies.json")  # loads up the db containing all currencies
+        db = load_json("db/crypto_currencies.json")  # loads up the db containing all currencies
 
         # deletes from the json so it cannot be loaded again
         for i in range(len(db["currencies"])):
-            if db["currencies"][i]["name"] == self.currency["name"]:
+            if db["currencies"][i]["name"] == self.name:
                 db["currencies"].pop(i)
                 db["count"] -=1
                 update_json("db/crypto_currencies.json", db)
@@ -203,7 +239,7 @@ class CryptoCurrency:
 
         # deletes it from the cache as well so it cannot be referenced
         for cached in crypto_cache:
-            if cached["name"] == self.currency["name"]:
+            if cached["name"] == self.name:
                 crypto_cache.remove(cached)
                 break
         #return db# returns the db
@@ -242,7 +278,7 @@ class CryptoCurrency:
 
         self.cache() # caches it
 
-        if self.currency["value"] <= self.currency["delete_value"]: # deletes the currency if it loses all value.
+        if self.value <= self.delete_value: # deletes the currency if it loses all value.
             self.delete()
             return
 
@@ -261,12 +297,12 @@ class CryptoCurrency:
         now = str(datetime.datetime.now().replace(second=0, microsecond=0))
         q1,q2,q3,q4 = "-03-31 00:00","-06-30 00:00","-09-31 00:00","-12-31 00:00" # the quarter datetimes
         if ((q1 in now) or (q2 in now) or (q3 in now) or (q4 in now)):
-            self.currency["threshold"] += (choice([-1, 1]) * 30) + 50
+            self.threshold += (choice([-1, 1]) * 30) + 50
 
         # daily spike
         # uses rng and not a datetime object because this can happen at any point in the day.
         spike_chance = randint(0,1440) # rolls a random. 1440 mins/day so this will spike daily
-        if spike_chance == 1440: self.currency["threshold"] = 50 #(choice((-1,1)) * 10) + 50
+        if spike_chance == 1440: self.threshold = 50
 
     def Vmax_mag_fluctuate(self):
         """
@@ -282,12 +318,12 @@ class CryptoCurrency:
         the sign is random.
         """
 
-        if self.currency["Vmax_mag"] <= 0.02: # 0.02 is chosen as it is the twice the maximum it can increase by.
+        if self.Vmax_mag <= 0.02: # 0.02 is chosen as it is the twice the maximum it can increase by.
             # 0.001-0.01 is arbitrary since Vmax_mag's value is unimportant as long as its not too large or negative
-            self.currency["Vmax_mag"] += 1 * uniform(0.001, 0.01)
+            self.Vmax_mag += 1 * uniform(0.001, 0.01)
             return
         else:
-            self.currency["Vmax_mag"] += randint(-1,1) * uniform(0.001, 0.01) # normally 0.001, 0.01
+            self.Vmax_mag += randint(-1,1) * uniform(0.001, 0.01) # normally 0.001, 0.01
 
     def thresh_fluctuate(self, val_increased:bool):
         """
@@ -309,7 +345,7 @@ class CryptoCurrency:
             so sign needs to be +1 to do so.
 
         """
-        T = self.currency["threshold"] # threshold value. stored as a variable for typing convenience and readibility
+        T = self.threshold # threshold value. stored as a variable for typing convenience and readibility
 
         if val_increased:
             Tfluc_chance = choice((-1,-1,1)) # this is more likely to return -1 which decreases the threshold
@@ -329,7 +365,7 @@ class CryptoCurrency:
             try: sign = (65-T)/abs(65-T)
             except ZeroDivisionError: sign = choice((-1,1))
 
-        self.currency["threshold"] += sign * Tfluc_chance  * uniform(0, self.currency["Tmax_mag"])
+        self.threshold += sign * Tfluc_chance  * uniform(0, self.Tmax_mag)
 
     def value_fluctuate(self, val_increased:bool):
         """
@@ -353,10 +389,10 @@ class CryptoCurrency:
             
         This causes value to always increase by a small amount, but if spiking, also by a percentage.
         """
-        T = self.currency["threshold"]
-        percent = self.currency["value"]/100
+        T = self.threshold
+        percent = self.value/100
 
-        base_factor = uniform(0, self.currency["Vmax_mag"]) # the normal amount the currency increases by
+        base_factor = uniform(0, self.Vmax_mag) # the normal amount the currency increases by
         try: bounds_factor = max(0, -abs((T**2) - (100*T) + 2275)/((T**2) - (100*T) + 2275)) # outside the bounds, return 1. within bounds, return 0
         except: bounds_factor = 0 # if the bounds factor is undefined, we just set it as 0 so it behaves normally
         percent_factor = uniform(0, percent/500_000) * gaussian_function(x=T, a=10_000, b=50, c=4) # ranges from 0->0.0002 times the value.
@@ -364,11 +400,11 @@ class CryptoCurrency:
         if val_increased: sign =1
         else:
             sign =-1
-            if self.currency["value"] < 2.5: # tp prevent currencies from dying too easily, it will only fluctuate by a small amount at dangerously low values
-                self.currency["value"] += sign * uniform(0.05,0.1)
+            if self.value < 2.5: # tp prevent currencies from dying too easily, it will only fluctuate by a small amount at dangerously low values
+                self.value += sign * uniform(0.05,0.1)
                 return
 
-        self.currency["value"] += sign * (base_factor + (bounds_factor * percent_factor))
+        self.value += sign * (base_factor + (bounds_factor * percent_factor))
 
     def fluctuate(self):
         """
@@ -390,20 +426,15 @@ class CryptoCurrency:
         Vfluc_chance = randint(0, 100)
         val_increased:bool
 
-        if Vfluc_chance >= self.currency["threshold"]:
+        if Vfluc_chance >= self.threshold:
 
             self.thresh_fluctuate(val_increased=True) # changes the threshold
             val_increased = True
-
-            # increases the value
-            #self.currency["value"] += uniform(0, self.currency["Vmax_mag"])
 
         else:
             self.thresh_fluctuate(val_increased=False) # changes the threshold
             val_increased = False
 
-            # decrease the value
-            #self.currency["value"] -= uniform(0, self.currency["Vmax_mag"])
 
         self.value_fluctuate(val_increased=val_increased)
 
@@ -418,15 +449,15 @@ class CryptoCurrency:
 
         Examples:
             >>>volume = 1
-            >>>self.currency["value"] = 1
-            >>>self.currency["m_cap"] = 100
+            >>>self.value = 1
+            >>>self.market_cap = 100
             >>>self.buy(1) # buys 1 share
-                >>>percent = volume / self.currency["m_cap"] # 0.01
-                >>>self.currency["value"] += self.currency["value"] * percent # 1.01
+                >>>percent = volume / self.market_cap # 0.01
+                >>>self.value += self.value * percent # 1.01
         """
-        percent = volume/ self.currency["m_cap"]
-        print("percent: ",percent,"\nvalue delta",self.currency["value"] * percent, "\n")
-        self.currency["value"]+= self.currency["value"] * percent
+        percent = volume/ self.market_cap
+        #print("percent: ",percent,"\nvalue delta",self.value * percent, "\n")
+        self.value+= self.value * percent
 
     def sell(self, volume:float):
         """
@@ -437,15 +468,15 @@ class CryptoCurrency:
 
         Examples:
             >>>volume = 1
-            >>>self.currency["value"] = 1
-            >>>self.currency["m_cap"] = 100
+            >>>self.value = 1
+            >>>self.market_cap = 100
             >>>self.sell(1) # buys 1 share
-                >>>percent = volume / self.currency["m_cap"] # 0.01
-                >>>self.currency["value"] -= self.currency["value"] * percent # 0.99
+                >>>percent = volume / self.market_cap # 0.01
+                >>>self.value -= self.value * percent # 0.99
         """
-        percent = volume / self.currency["m_cap"]
-        print("percent: ",percent,"\nvalue delta",self.currency["value"] * percent, "\n")
-        self.currency["value"] -= self.currency["value"] * percent
+        percent = volume / self.market_cap
+        #print("percent: ",percent,"\nvalue delta",self.value * percent, "\n")
+        self.value -= self.value * percent
 
     def history_append(self):
         """
@@ -453,13 +484,17 @@ class CryptoCurrency:
 
         Is called every hour on the frst minute. Example: 01:00:00. at 1:00 am
         """
-        self.currency["values"].append( # make sure date is casted to str as JSON cant store datetime objects
+        self.values.append( # make sure date is casted to str as JSON cant store datetime objects
             {
                 "date": str(datetime.datetime.now().replace(microsecond=0, second=0)),
-                "value": self.currency["value"]
+                "value": self.value
             }
         )
 
+    def __str__(self):
+        return f"name: {self.name}, created date: {self.creation_date}, uid: {self.uid}, total_shares: {self.total_shares}, market_cap: {self.market_cap}, " \
+               f"delete_value: {self.delete_value}, value: {self.value}, Vmax_mag: {self.Vmax_mag}, threshold: {self.threshold}, " \
+               f"Tmax_mag: {self.Tmax_mag}, values: {self.values}"
 
 if __name__ == '__main__':
     os.chdir("/home/loona/programming/Kryptonite-Bot/src")
