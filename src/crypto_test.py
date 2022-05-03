@@ -14,7 +14,7 @@ objective:
     takes the results and outputs them to a .csv file
 """
 
-fields = ["time(min)", "value", "Vmax_mag", "Tmax_mag", "threshold", "Market cap", "number of shares"] # the fields used in the csv file
+fields = ["time(min)", "value", "sale", "purchase", "threshold", "Market cap", "number of shares"] # the fields used in the csv file
 
 def simulate_notrade(time_period=10080):
     """
@@ -60,23 +60,24 @@ def simulate_with_trade(time_period=10080):
     rows = []
 
     for i in range(time_period):
-
         try:
-            # trades
-            if randint(0,1)==1: coin_buy(randint(0,20), 0)
-            if randint(0,1)==1: coin_sell(randint(0,20), 0)
-
-            # simulates the currency
-            db = utils.json_utils.load_json("db/crypto_currencies.json") # loads all currencies
-
             coin = CryptoCurrency(crypto_cache[0])
+
+            # trades
+            purchase = 0
+            sale=0
+            buyshares = randint(10_000,500_000)
+            sellshares = randint(10_000, 500_000)
+            if randint(0,1440)==1: purchase =coin_buy(buyshares, coin)
+            if randint(0,1440)==1: sale =coin_sell(sellshares, coin)
+
             coin.simulate()
 
             rows.append([  # appends the values to the rows
                 i,
                 coin.value,
-                coin.Vmax_mag,
-                coin.Tmax_mag,
+                sale,
+                purchase,
                 coin.threshold,
                 coin.market_cap,
                 coin.total_shares
@@ -86,13 +87,12 @@ def simulate_with_trade(time_period=10080):
 
     save_to_file(filename, rows)
 
-def coin_buy(shares:int, cache_index:int):
-    coin = CryptoCurrency(crypto_cache[cache_index])
-    coin.buy(coin.value * shares)
+def coin_buy(shares:int, coin):
+    #coin = CryptoCurrency(crypto_cache[cache_index])
+    return coin.buy(coin.value * shares)
 
-def coin_sell(shares:int, cache_index:int):
-    coin = CryptoCurrency(crypto_cache[cache_index])
-    coin.sell(coin.value * shares)
+def coin_sell(shares:int, coin):
+    return coin.sell(coin.value * shares)
 
 def save_to_file(filename, rows):
     with open(f"tests/{filename}", "w") as file:
@@ -115,11 +115,11 @@ if __name__ == '__main__':
     #update_json("db/crypto_currencies.json", db)
 
     new = CryptoCurrency()
-    """print(new)
-    print(new.value)
-    crypto_cache[0]["value"] = 1
-    n1 = CryptoCurrency(crypto_cache[0])
-    print(n1)
-    print(n1.value)"""
+
+    #print(new.total_shares)
+    #print(new.value)
+    #print(coin_buy(1_000_000, new))
+    #print(new.value)
 
     simulate_with_trade(43200)
+

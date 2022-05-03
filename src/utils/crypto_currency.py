@@ -45,7 +45,8 @@ class CryptoCurrency:
                 0.005,
                 uniform(0.004, 0.00013)*self.value
             )
-            self.total_shares = randint(9000, 100_000)
+            # if too volatile, 5M-15M
+            self.total_shares = randint(9_000, 100_000) # normally 9k-100k.
 
             self.threshold = 35.0 # normally 50.0
             self.Tmax_mag = 1.0
@@ -274,7 +275,8 @@ class CryptoCurrency:
         if datetime.datetime.now().minute == 0:
             self.history_append() # adds to history of values
 
-        self.save() # saves the values to the database
+        # when testing, comment this line
+        self.save() # saves the values to the database.
 
         self.cache() # caches it
 
@@ -455,9 +457,10 @@ class CryptoCurrency:
                 >>>percent = volume / self.market_cap # 0.01
                 >>>self.value += self.value * percent # 1.01
         """
-        percent = volume/ self.market_cap
-        #print("percent: ",percent,"\nvalue delta",self.value * percent, "\n")
-        self.value+= self.value * percent
+        percent = volume / self.market_cap
+        delta = self.value * percent
+        self.value+= delta
+        return delta
 
     def sell(self, volume:float):
         """
@@ -475,8 +478,9 @@ class CryptoCurrency:
                 >>>self.value -= self.value * percent # 0.99
         """
         percent = volume / self.market_cap
-        #print("percent: ",percent,"\nvalue delta",self.value * percent, "\n")
-        self.value -= self.value * percent
+        delta = self.value * percent
+        self.value -= delta
+        return delta
 
     def history_append(self):
         """
