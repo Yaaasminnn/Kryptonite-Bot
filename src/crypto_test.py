@@ -66,8 +66,8 @@ def simulate_with_trade(time_period=10080):
             # trades
             purchase = 0
             sale=0
-            buyshares = randint(10_000,500_000)
-            sellshares = randint(10_000, 500_000)
+            buyshares = randint(1_000,50_000)
+            sellshares = randint(1_000, 50_000)
             if randint(0,1440)==1: purchase =coin_buy(buyshares, coin)
             if randint(0,1440)==1: sale =coin_sell(sellshares, coin)
 
@@ -105,21 +105,13 @@ def save_to_file(filename, rows):
         writer.writerows(rows)
     print(f"Saved {filename}!")
 
-if __name__ == '__main__':
-    db = utils.json_utils.load_json("db/crypto_currencies.json")
-
-    for dict in db["currencies"]: # deletes all existing currencies
-        #print(dict)
-        coin = CryptoCurrency(dict)
-        coin.delete()
-    #update_json("db/crypto_currencies.json", db)
-
+def exists_test():
     new = CryptoCurrency()
+    name = new.name
+    print(exists(name))
 
-    #print(new.total_shares)
-    #print(new.value)
-    #print(coin_buy(1_000_000, new))
-    #print(new.value)
+if __name__ == '__main__':
+    clear_db()
 
-    simulate_with_trade(43200)
+    #simulate_with_trade(43200)
 

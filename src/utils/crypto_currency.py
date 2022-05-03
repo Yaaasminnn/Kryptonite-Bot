@@ -500,6 +500,28 @@ class CryptoCurrency:
                f"delete_value: {self.delete_value}, value: {self.value}, Vmax_mag: {self.Vmax_mag}, threshold: {self.threshold}, " \
                f"Tmax_mag: {self.Tmax_mag}, values: {self.values}"
 
+    @staticmethod
+    def exists(name:str)->bool:
+        db = load_json("db/crypto_currencies.json")
+        for currency in db["currencies"]:
+            if currency["name"] == name: return True
+        return False
+
+    def determine_cost(self):
+        """
+        Determines the cost of trading a currency
+        :return:
+        """
+        pass
+    def calc_value(self):
+        pass
+
+def clear_db():
+    db = load_json("db/crypto_currencies.json")
+    for currency in db["currencies"]:
+        coin = CryptoCurrency(currency)
+        coin.delete()
+
 if __name__ == '__main__':
     os.chdir("/home/loona/programming/Kryptonite-Bot/src")
 

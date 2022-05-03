@@ -253,6 +253,18 @@ class User:
 
     def check_limit(self): pass
 
+    def calc_tax(self, account_name:str, subtotal:float):
+        """
+        Calculates the tax rate of a purchase.
+        :param account_name:
+        :param subtotal:
+        :return:
+        """
+        if account_name == "tfa":
+            return subtotal
+        else:
+            return tax_rate * subtotal
+
 if __name__ == '__main__':
     os.chdir("/home/loona/programming/Kryptonite-Bot/src")
     load_constants()
