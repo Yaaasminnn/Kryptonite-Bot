@@ -108,10 +108,12 @@ def save_to_file(filename, rows):
 def exists_test():
     new = CryptoCurrency()
     name = new.name
-    print(exists(name))
+    print(new.exists(name))
 
 if __name__ == '__main__':
-    clear_db()
+    #clear_db()
+
+    new = CryptoCurrency()
 
     #simulate_with_trade(43200)
 

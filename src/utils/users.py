@@ -1,5 +1,5 @@
 import os
-from json_utils import *
+from src.utils.json_utils import *
 import datetime
 import asyncio
 
@@ -15,7 +15,7 @@ def load_constants():
     """
     global tax_rate, tax_free_trading_limit_dollars, trading_limit_shares, max_transfer_limit, start_amount, taxed_trading_limit_dollars, max_balance
     constants = load_json("kryptonite_bot/constants.json")
-    max_transfer_limit = ["max transfer limit"]
+    max_transfer_limit = constants["max transfer limit"]
     trading_limit_shares = constants["trading limit shares"]
     tax_free_trading_limit_dollars = constants["tax free trading limit dollars"]
     taxed_trading_limit_dollars = constants["taxed trading limit dollars"]
@@ -36,7 +36,25 @@ class User:
         this is because the user can do many things(trade, gamble, transfer) after accessing their account.
         Thus, the program must load the userdata, trade/gamble/transfer and then save seperately.
         """
-        try: # if the json file dosent already exist, create it
+
+        try: # assuming the user exists in the database, just load them l=normally
+            user = load_json(f"db/users/{uid}.json")
+            self.uid = uid
+            self.wallet = user["wallet"]
+            self.accounts = user["accounts"]
+            self.last_accessed = user["last_accessed"]
+
+        except: # if they dont exist, create them
+            create_json(f"db/users/{uid}.json") # creates the user
+            user = load_json(f"db/users/{uid}.json")
+            self.uid = uid
+            self.wallet = start_amount
+            self.create_accounts() # creates all accounts
+            self.update_last_accessed()
+
+            self.save() # saves the user
+
+        """try: # if the json file dosent already exist, create it
             self.user = load_json(f"db/users/{uid}.json")
         except:
             create_json(f"db/users/{uid}.json")
@@ -46,12 +64,11 @@ class User:
             self.create_accounts() # creates both crypto accounts
 
             # saves the user
-            self.save()
-
-
+            self.save()"""
+        # verifies that all holdings they own still exist.
+        # incase a coin crashes, the holdings will have no value anymore and are deleted.
         self.verify_holdings()
         self.update_last_accessed()
-        #pretty_print(self.user)
 
     def create_accounts(self):
         """
@@ -59,32 +76,55 @@ class User:
 
         Creates a Tax free account and a regular account.
         """
-        accounts = []
-        accounts.append( # regular account
-            {
+        accounts = {}
+        accounts["ntfa"] =  {
                 "tax_free": False,
                 "name": "ntfa",
                 "balance": 0,
                 "holdings": {},
                 "num_holdings": 0
-            }
-        )
-        accounts.append( # tax-free account
-            {
+            } # the Non-Tax Free Account; ntfa
+        accounts["tfa"] = {
                 "tax_free": True,
                 "name": "tfa",
                 "balance":0,
                 "holdings": {},
                 "num_holdings": 0
-            }
-        )
-        self.user["accounts"] = accounts
+            } # the Tax Free Account; tfa
+
+        self.accounts = accounts
+
+    def obj_to_dict(self)->dict:
+        """
+        Transforms an object into a JSON dictionary to save.
+        :return:
+        """
+        user = {}
+
+        user["uid"] = self.uid
+        user["wallet"] = self.wallet
+        user["accounts"] = self.accounts
+        user["last_accessed"] = self.last_accessed
+
+        return user
+
+    @staticmethod
+    def clear_userbase(): # removes all users
+        pass
+
+    @staticmethod
+    def clear_account(uid:int): # removes a user
+        os.remove(f"db/users/{uid}.json")
+
+    def dict_to_obj(self):pass
 
     def save(self):
         """
         Saves the Userdata.
         """
-        update_json(f"db/users/{self.user['uid']}.json", self.user)
+        user = self.obj_to_dict() # transforms the object to a dict
+
+        update_json(f"db/users/{self.uid}.json", user)
 
     def verify_holdings(self):
         """
@@ -95,22 +135,24 @@ class User:
         """
         crypto_db = load_json("db/crypto_currencies.json")
         not_in_db=[]
-        for i, account in enumerate(self.user["accounts"]): # we enumerate so we can delete the account index easily
+        accounts = ["tfa", "ntfa"]
 
-            for j in account["holdings"]: # we iterate backwards because we are modifying an index as we iterate through it
-                in_db=False
-                for crypto in crypto_db["currencies"]: # if the specific holding exists, we break
-                    if j == crypto["name"]:
+        for account in accounts:
+
+            for holding in self.accounts[account]["holdings"]:
+                in_db = False
+                for crypto in crypto_db["currencies"]:
+                    if holding == crypto["name"]:
                         in_db = True
                         break
 
                 if not in_db:
-                    not_in_db.append(j)
+                    not_in_db.append(holding)
 
-            for k in not_in_db:
-                del_dict_key(self.user["accounts"][i]["holdings"], key=k)
+            for holding in not_in_db:
+                del_dict_key(self.accounts[account]["holdings"], key=holding)
 
-            not_in_db=[]
+            not_in_db = []
 
     def update_last_accessed(self):
         """
@@ -119,7 +161,7 @@ class User:
         This is to keep track of the last time this user was accessed.
         :return:
         """
-        self.user["last_accessed"] = str(datetime.datetime.now().replace(second=0, microsecond=0))
+        self.last_accessed = str(datetime.datetime.now().replace(second=0, microsecond=0))
 
     def trade(self): pass
 
@@ -131,14 +173,12 @@ class User:
         todo:
             add support for depositing/withdrawing all
         """
-        if amount > self.user["wallet"]:
-            return f"Insufficient wallet balance\nBalance: {self.user['wallet']}\nNeeded: {amount}"
+        if amount > self.wallet:
+            return f"Insufficient wallet balance\nBalance: {self.wallet}\nNeeded: {amount}"
 
-        self.user["wallet"] -=amount
-        if account_name == "tfa":
-            self.user["accounts"][1]["balance"] += amount
-        else:
-            self.user["accounts"][0]["balance"] += amount
+        self.wallet -=amount
+        self.accounts[account_name]["balance"] += amount
+
 
     def bank_withdraw(self, amount:float, account_name:str):
         """
@@ -150,11 +190,11 @@ class User:
         if account_name == "tfa": account_index = 1
         else: account_index = 0
 
-        if amount > self.user["accounts"][account_index]["balance"]: # cannot exceed existing funds
-            return f"Insufficient balance.\nBalance: {self.user['accounts'][account_index]['balance']}\nNeeded: {amount}"
+        if amount > self.accounts[account_name]["balance"]: # cannot exceed existing funds
+            return f"Insufficient bank balance.\nBalance: {self.accounts[account_name]['balance']}\nNeeded: {amount}"
 
-        self.user["accounts"][account_index]["balance"] -= amount
-        self.user["wallet"] += amount
+        self.accounts[account_name]["balance"] -= amount
+        self.wallet += amount
 
     def c_buy(self, account_name:str, num:int, token_val:int, token_name:str):
         """
@@ -189,11 +229,11 @@ class User:
 
 
         # checks if the user's account balance is >= the volume of the purchase
-        if self.user["accounts"][account_index]["balance"] < volume:
-            return f"Insufficient balance.\nBalance: {self.user['accounts'][account_index]['balance']}\nNeeded: {volume}"
+        if self.accounts[account_index]["balance"] < volume:
+            return f"Insufficient balance.\nBalance: {self.accounts[account_index]['balance']}\nNeeded: {volume}"
 
         # subtracts volume from the bank balance
-        self.user["accounts"][account_index]["balance"] -= volume
+        self.accounts[account_index]["balance"] -= volume
 
         # Adds the holdings to the account. if the holding does not exist, create it
         if token_name not in self.user["accounts"][account_index]["holdings"]:
@@ -242,18 +282,20 @@ class User:
         The bot calling this function will determine needed.(positive integers only, who to ping etc)
         """
         if amount > max_transfer_limit: # cant  exceed the transfer limit.
-            return f"Transfer amount exceeds transfer limit.\nTransfer limit: {self.user['max transfer limit']}"
+            return f"Transfer amount exceeds transfer limit.\nTransfer limit: {max_transfer_limit}"
 
-        if amount > self.user["wallet"]:
-            return f"Insufficient funds to transfer.\n Your wallet: {self.user['wallet']}\nAmount to send: {amount}"
+        if amount > self.wallet:
+            return f"Insufficient funds to transfer.\n Your wallet: {self.wallet}\nAmount to send: {amount}"
 
         recipient = User(uid) # loads the recipient
-        self.user["wallet"] -=amount
-        recipient.user["wallet"] += amount
+        self.wallet -=amount
+        recipient.wallet += amount
+        recipient.save()
 
     def check_limit(self): pass
 
-    def calc_tax(self, account_name:str, subtotal:float):
+    @staticmethod
+    def calc_tax(account_name:str, subtotal:float):
         """
         Calculates the tax rate of a purchase.
         :param account_name:
