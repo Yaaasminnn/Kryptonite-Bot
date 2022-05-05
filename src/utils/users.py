@@ -179,7 +179,6 @@ class User:
         self.wallet -=amount
         self.accounts[account_name]["balance"] += amount
 
-
     def bank_withdraw(self, amount:float, account_name:str):
         """
         Withdraws money from the bank account to the user's wallet.
@@ -294,13 +293,29 @@ class User:
 
     def check_limit(self): pass
 
+    def has_enough(self,account_name:str, cost:float)->bool:
+        """
+        Determines if the user has enough money to cover a certain purchase.
+        """
+        return self.accounts[account_name]["balance"] >= cost
+
+    def modify_account(self, account_name:str, amount:float):
+        """
+        modifies a bank account with the given amount of money.
+
+        is called after checking if the user can afford the purchase or sale.
+
+        sales are negative
+        purchases are positive
+        """
+        self.accounts[account_name]["balance"] += amount
+
     @staticmethod
     def calc_tax(account_name:str, subtotal:float):
         """
-        Calculates the tax rate of a purchase.
-        :param account_name:
-        :param subtotal:
-        :return:
+        Calculates the tax rate of a purchase given a subtotal.
+
+        the user gives an account name, either tfa or ntfa. it is only taxed if it is a ntfa(non-tax free account)
         """
         if account_name == "tfa":
             return subtotal

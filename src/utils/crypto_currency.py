@@ -46,7 +46,7 @@ class CryptoCurrency:
                 uniform(0.004, 0.00013)*self.value
             )
             # if too volatile, 5M-15M
-            self.total_shares = randint(9_000, 100_000) # normally 9k-100k.
+            self.total_shares = randint(90_000, 2_000_000) # normally 9k-100k. make it between that and 90k-2m. 100k shares = 30ish delta
 
             self.threshold = 35.0 # normally 50.0
             self.Tmax_mag = 1.0
@@ -507,14 +507,51 @@ class CryptoCurrency:
             if currency["name"] == name: return True
         return False
 
-    def determine_cost(self):
+    def calc_value(self, shares:int)->float:
         """
-        Determines the cost of trading a currency
-        :return:
+        Calculates the hypothetical cost of self.value after buying :shares: number of shares
+
+        will be used when calculating if a user has enough money to make a purchase
+
+        Explain the formula:
+            based on self.buy()
+            v= value || self.value
+            shares = # of shares
+            m_cap = market cap || self.market_cap
+            total_shares = total shares || self.total_shares
+
+            m_cap = total_shares * value
+            volume = value * shares
+            percent = volume/m_cap   # volume's percentage of the market cap.
+            delta = percent * value # value increases by the percentage of the market cap * current value
+            value = value + delta # add the delta to v
+
+            formula = v + (v * percent) = v + (v * (volume/m_cap)) = v + (v * (v * shares)/m_cap) =
+            v + (v * (v * shares)/(total_shares * v)) =
+            v + (v^2 * shares/(total_shares * v)) =
+            v + (v * shares)/total_shares
         """
-        pass
-    def calc_value(self):
-        pass
+        v = self.value
+        v += (v*shares)/self.total_shares
+        return v
+
+    def change_currency_value(self, v:float):
+        """
+        Changes the currency value after a purchase/sale
+        """
+        self.value = v
+
+    def determine_cost(self, v:float, shares:int):
+        """
+        Determines the cost of trading a currency given a certain amount of shares.
+
+        used along with calc_value(). calc_value() determines the new value and passes it in to determine_cost().
+        this formula returns the subtotal which is then passed into user.calc_tax()
+
+        after calculating the value for every round, we multiply the new value by the amount of shares to get the cost
+        of that purchase.
+        """
+        return v * shares
 
 def clear_db():
     db = load_json("db/crypto_currencies.json")

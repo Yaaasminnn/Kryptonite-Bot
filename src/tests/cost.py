@@ -6,17 +6,18 @@ issues:
     work with values not divisible by a
 """
 a = 50 # the number of shares we buy at a time. compound value?
-tot_a = 10 # the total number of shares to be bought
-s = 54_500 # the total number of shares
+tot_a = 1_000 # the total number of shares to be bought
+s = 1045000 # the total number of shares
 v = 25 # the initial share price. this can be changed
 v_og = 25 # a copy of the initial share price. this will not be changed
 cost = 0
 tax = 0
 
-a = min(tot_a, a) # incase the number of shares is less than
+#a = min(tot_a, a) # incase the number of shares is less than
 
-for i in range(min(1,int(tot_a/a))):
-    v += (v*a)/s**2 # the new value after 50 shares
+for i in range(int(tot_a/a)):
+    v += (v*a)/s # the new value after 50 shares
+    #v+= v*((v*a)/(v*s))
 
     tax += 0.12*(a * v)
 
@@ -25,3 +26,4 @@ for i in range(min(1,int(tot_a/a))):
 
 print(f"\nwithout tax: {cost}")
 print(f"with tax: {cost + tax}")
+print(f"tax not compounded {cost * 1.12}")
