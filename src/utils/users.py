@@ -291,13 +291,54 @@ class User:
         recipient.wallet += amount
         recipient.save()
 
-    def check_limit(self): pass
+    def shares_exceeds_trade_limit(self, shares:int)->bool:
+        """
+        Determines if the number of shares exceed the trading limit.
+        """
+        if shares > trading_limit_shares: return True
+        return False
 
-    def has_enough(self,account_name:str, cost:float)->bool:
+    def volume_exceeds_trade_limit(self, account_name:str, volume:float)->bool:
+        """
+        Determines if the volume of the trade exceeds the trading limits.
+
+        there are different trading limits depending on the account.
+        """
+
+        if account_name == "tfa":
+            if volume > tax_free_trading_limit_dollars: return True
+        elif account_name == "ntfa":
+            if volume > taxed_trading_limit_dollars: return True
+        return False
+
+    def has_enough_balance(self, account_name:str, cost:float)->bool:
         """
         Determines if the user has enough money to cover a certain purchase.
         """
         return self.accounts[account_name]["balance"] >= cost
+
+    def has_enough_shares(self, account_name:str, coin_name:str, shares:int)->bool:
+        """
+        determines if the user has enough shares to sell.
+
+        we need the account name, what coin and how many shares we are selling.
+        then we can just access that coin's holding in the right account and compare the number of shares.
+
+        Also returns False if the user has no shares as the user does not have enough to sell.
+        """
+
+        # incase the user owns no shares, return False because they dont have enough to sell.
+        try: existing_shares = self.accounts[account_name]["holdings"][coin_name]
+        except KeyError: return False
+
+        return self.accounts[account_name]["holdings"][coin_name] >= shares
+
+    def balance_exceeds_limit(self, account_name:str, amount:float)->bool:
+        """
+        Ensures that the user's bank account does not exceed the maximum balance.
+        """
+        if (self.accounts[account_name]["balance"] + amount) > max_balance: return True
+        return False
 
     def modify_account(self, account_name:str, amount:float):
         """
@@ -322,44 +363,23 @@ class User:
         else:
             return tax_rate * subtotal
 
-if __name__ == '__main__':
-    os.chdir("/home/loona/programming/Kryptonite-Bot/src")
-    load_constants()
+    def add_holding(self, account_name:str, coin_name:str, shares:int):
+        """
+        Adds a holding in. used when buying
 
-    new = User(1)
+        checks if the holding exists, holding_exists()
+        then, adds the number of shares to it
+        """
+        self.accounts[account_name]["holdings"][coin_name] = shares
 
-    """# testing sell
-    kbx_value = 10
-    kbx_name = "kbx"
-    new.user["accounts"][1]["holdings"][kbx_name] =1
-    new.user["accounts"][1]["balance"] = 10
-    new.c_sell("tfa", num=1, token_val=kbx_value, token_name=kbx_name)
-    new.save()"""
+    def remove_holding(self, account_name:str, coin_name:str, shares:int):
+        """
+        removes a holding.
 
+        we already check if the holding doesnt exist in self.has_enough_shares()
 
-
-    # tesing buy
-    """
-    kbx_value = 10
-    kbx_name = "kbx"
-    # tax free
-    new.user["accounts"][1]["balance"] = 10
-    print(new.c_buy("tfa", 1, 11000, kbx_name))
-    # taxed
-    new.user["accounts"][0]["balance"] = 10
-    print(new.c_buy("ntfa", 1, 520000, kbx_name))
-
-
-    # sell
-    #new.c_sell("tfa", 1, kbx_value, kbx_name)
-
-    new.save()
-    """
-
-
-
-    # depositing and withdrawing
-    """
-    new.bank_deposit(10, "tfa")
-    new.save()
-    """
+        reduce the number of shares by amount and if it == 0: remove it
+        """
+        self.accounts[account_name]["holdings"][coin_name] -= shares
+        if self.accounts[account_name]["holdings"][coin_name] == 0:
+            del_dict_key(self.accounts[account_name]["holdings"], coin_name)

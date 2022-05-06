@@ -501,13 +501,13 @@ class CryptoCurrency:
                f"Tmax_mag: {self.Tmax_mag}, values: {self.values}"
 
     @staticmethod
-    def exists(name:str)->bool:
+    def exists(name:str):
         db = load_json("db/crypto_currencies.json")
         for currency in db["currencies"]:
-            if currency["name"] == name: return True
+            if currency["name"] == name: return currency
         return False
 
-    def calc_value(self, shares:int)->float:
+    def calc_value(self, v:float,shares:int)->float:
         """
         Calculates the hypothetical cost of self.value after buying :shares: number of shares
 
@@ -531,7 +531,7 @@ class CryptoCurrency:
             v + (v^2 * shares/(total_shares * v)) =
             v + (v * shares)/total_shares
         """
-        v = self.value
+        #v = self.value
         v += (v*shares)/self.total_shares
         return v
 
@@ -541,7 +541,7 @@ class CryptoCurrency:
         """
         self.value = v
 
-    def determine_cost(self, v:float, shares:int):
+    def calc_cost(self, v:float, shares:int):
         """
         Determines the cost of trading a currency given a certain amount of shares.
 
@@ -559,37 +559,4 @@ def clear_db():
         coin = CryptoCurrency(currency)
         coin.delete()
 
-if __name__ == '__main__':
-    os.chdir("/home/loona/programming/Kryptonite-Bot/src")
-
-    # EXECUTION AND TESTING OF FEATURES BELOW
-    db = load_json("db/crypto_currencies.json")
-
-    # adding currencies
-
-    new_crypto = CryptoCurrency()
-    print(new_crypto.currency)
-
-    #deleting currencies
-    """
-    for dict in db["currencies"]:
-        dict = CryptoCurrency(dict)
-        dict.delete()
-    """
-
-    # caching currencies
-    """
-    new = CryptoCurrency()
-    new.cache()
-    print(crypto_cache)
-    #print(new.currency["value"], new.currency["threshold"], new.currency["Vmax_mag"])
-    #new.simulate()
-    #print(new.currency["value"], new.currency["threshold"], new.currency["Vmax_mag"])
-    """
-
-    #prints the cache
-    """cache_dict = {
-        "crypt_cache": crypto_cache
-    }
-    print(json.dumps(cache_dict, indent=4, sort_keys=False))"""
 

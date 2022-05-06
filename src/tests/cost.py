@@ -19,7 +19,7 @@ for i in range(int(tot_a/a)):
     v += (v*a)/s # the new value after 50 shares
     #v+= v*((v*a)/(v*s))
 
-    tax += 0.12*(a * v)
+    tax += 0.12*(a * v) # can be calculated afterward
 
     cost += a * v
     print(f"value: {v}, cost: {cost}, tax: {tax}")
