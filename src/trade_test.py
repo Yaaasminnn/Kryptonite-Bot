@@ -13,23 +13,23 @@ def load_dict_test(coin_name:str):
     # tests CryptoCurrency.load_coin_dict()
     print(CryptoCurrency.load_coin_dict(coin_name))
 
-def calc_value_test(coin:CryptoCurrency, shares:int):
+def calc_value_test(coin:CryptoCurrency, shares:int, buying:bool):
     # calculates the value after buying a few shares
-    print(coin.calc_value(coin.value,shares))
+    print(coin.calc_value(coin.value,shares, buying))
 
-def calc_cost_test(coin:CryptoCurrency, shares:int):
+def calc_cost_test(coin:CryptoCurrency, shares:int, buying:bool):
     # the subtotal(cost) is simply the new value multiplied by the number of shares to purchase
-    v = coin.calc_value(coin.value, shares)
+    v = coin.calc_value(coin.value, shares, buying)
     print(v)
     subtotal = coin.calc_cost(v, shares)
     print(subtotal)
 
-def calc_taxes_test(user:User, coin:CryptoCurrency, shares:int):
+def calc_taxes_test(user:User, coin:CryptoCurrency, shares:int, buying:bool):
     # the taxes add on 12% of the subtotal
     # there are 2 scenarios:
     #   tax-free: total = subtotal          account_name="tfa"
     #   taxed: total = 1.12 * subtotal      account_name="ntfa"
-    v = coin.calc_value(coin.value, shares)
+    v = coin.calc_value(coin.value, shares, buying)
     print("value: ",v)
 
     subtotal = coin.calc_cost(v, shares)
@@ -66,8 +66,8 @@ def modify_account_test(user:User, account_name:str, total:float, buying:bool):
     #    buying             total = -total
     #    selling            total = total
     # this is because we add the amount passed in. subtracting it means we are buying
-    if buying: total = -total # if we are buying, make total negative
-    user.modify_account(account_name, total)
+    #if buying: total = -total # if we are buying, make total negative
+    user.modify_account(account_name, total, buying)
 
 def change_value_test(coin:CryptoCurrency, value):
     # this method just changes coin.value to the given value
@@ -100,6 +100,21 @@ def decrease_holding_test(user:User, account_name:str, coin_name:str, shares:int
     user.save()
 
 def buy_test(uid, account_name:str, coin_name:str, shares:int):
+    # buying the currency.
+    # checks if the currency exists first, if not return. if it does, load it up
+    # proceeds to calculate the value. only calculating the cost/value shares_per_interval(or 50) at a time
+    # or by the number of shares if it is less than shares_per_interval
+    # during this time, we keep track of the number of shares traded. the number you pass in vs the number traded may be different
+    # this is if the coin's value reaches 0 or passes the maximum limit
+    # afterward, it simply calculates the total and modifies the user and currency data
+    # scenarios:
+    #    value is driven <=0
+    #
+    #
+    #
+    #
+    #
+    #
 
     user = User(uid) # loads up the user instance
 
@@ -109,45 +124,154 @@ def buy_test(uid, account_name:str, coin_name:str, shares:int):
     else:
         coin = CryptoCurrency(CryptoCurrency.load_coin_dict(coin_name))
 
+
+
     # actually calculates the volume of the purchase
     subtotal = 0
+    shares_traded = 0 # keeps track of the number of shares u traded
     v= coin.value
-    mod = shares % shares_per_interval
-    shares_cpy = shares
-    for i in range(5): # determine how many times this runs. this section's "shares" will be replaced
-        v = coin.calc_value(v,shares) # given the number of shares, calculates the new value of v
-        subtotal += coin.calc_cost(v, shares) # calculates the subtotal given v and the number of shares
+    shares_total = shares # keeps track of the total number of shares
+    while (shares > 0 and (v > coin.delete_value)): # determine how many times this runs. this section's "shares" will be replaced
 
-        if shares_cpy >= shares_per_interval:
-            shares_cpy -= shares_per_interval
+        deducted_shares = min(shares_per_interval, shares)
 
-    total = user.calc_tax(account_name=account_name, subtotal=subtotal)
+        v = coin.calc_value(v,deducted_shares, buying=True) # given the number of shares, calculates the new value of v
+        subtotal += coin.calc_cost(v, deducted_shares) # calculates the subtotal given v and the number of shares
 
-    # a number of extra checks to make sure the trade is valid
-    if not user.has_enough_balance(account_name=account_name, cost=total): return "Does not have enough money"
-    if not user.volume_exceeds_trade_limit(account_name=account_name, volume=subtotal): return "subtotal exceeds trading limit" # uses subtotal instead of total
-    if not user.shares_exceeds_trade_limit(shares): return "Shares exceed trading limit"
+        if shares >= shares_per_interval:
+            shares -= shares_per_interval
 
-    user.modify_account(account_name=account_name, amount=total) # when buying, amount is +, selling, -
+        elif shares < shares_per_interval:
+            shares = 0
+
+        shares_traded += deducted_shares
+
+    total = user.calc_tax(account_name=account_name, subtotal=subtotal) # the total including taxes
+    #print(v, total)
+
+
+
+    # a number of extra checks to make sure the trade is valid------------
+
+    # if the user cannot afford to pay
+    if not user.has_enough_balance(account_name=account_name, cost=total): return f"Does not have enough money\nHas: {user.accounts[account_name]['balance']}.\n needs: {total}"
+
+    # if the volume of the purchase exceeds the limit
+    if user.volume_exceeds_trade_limit(account_name=account_name, volume=subtotal): return f"subtotal exceeds trading limit\nsubtotal: {subtotal}\nlimit: {taxed_trading_limit_dollars} {tax_free_trading_limit_dollars}" # uses subtotal instead of total
+
+    # if the user has attempted to trade more shares than they are allowed to.
+    # uses the shares_total so its easier to understand.
+    if user.shares_exceeds_trade_limit(shares_total): return f"Shares exceed trading limit. \nto buy: {shares_total}\nmax:{trading_limit_shares}"
+
+
+
+    user.modify_account(account_name=account_name, amount=total, buying=True) # when buying, amount is +, selling, -
     coin.change_currency_value(v) # changes the value of the currency
-    user.increase_holding(account_name=account_name, coin_name=coin_name, shares=shares) # modifies the holding
+    user.increase_holding(account_name=account_name, coin_name=coin_name, shares=shares_total) # modifies the holding
 
-def sell_test(uid, account_name:str, coin_name:str, shares:int): pass
+    coin.should_delete()
+    coin.save()
+    user.save()
 
+def sell_test(uid, account_name:str, coin_name:str, shares:int):
+    # need to add user.has_enough_shares()
+    # and user.balance_exceeds_limit()
+    # remove user.has_enough_balance()
+    # need to test
+    # checks for unit tests of the afore mentioned
+    # scenario:
+    #   drive the value to 0
+
+    user = User(uid)  # loads up the user instance
+
+    # if the coin does not exist, return, otherwise load up the currency instance.
+    if CryptoCurrency.exists(coin_name) == False:
+        return "Currency does not exist"
+    else:
+        coin = CryptoCurrency(CryptoCurrency.load_coin_dict(coin_name))
+
+    # actually calculates the volume of the purchase
+    subtotal = 0
+    shares_traded = 0  # keeps track of the number of shares u traded
+    v = coin.value
+    shares_total = shares  # keeps track of the total number of shares
+    while (shares > 0 and ( v > coin.delete_value)):  # determine how many times this runs. this section's "shares" will be replaced
+
+        deducted_shares = min(shares_per_interval, shares)
+
+        v = coin.calc_value(v, deducted_shares, buying=True)  # given the number of shares, calculates the new value of v
+        subtotal += coin.calc_cost(v, deducted_shares)  # calculates the subtotal given v and the number of shares
+
+        if shares >= shares_per_interval:
+            shares -= shares_per_interval
+
+        elif shares < shares_per_interval:
+            shares = 0
+
+        shares_traded += deducted_shares
+
+
+
+    # a number of extra checks to make sure the trade is valid------------
+
+    # if the user cannot afford to pay
+    if not user.has_enough_balance(account_name=account_name,
+                                   cost=subtotal): return f"Does not have enough money\nHas: {user.accounts[account_name]['balance']}.\n needs: {subtotal}"
+
+    # if the volume of the purchase exceeds the limit
+    if user.volume_exceeds_trade_limit(account_name=account_name,
+                                       volume=subtotal): return f"subtotal exceeds trading limit\nsubtotal: {subtotal}\nlimit: {taxed_trading_limit_dollars} {tax_free_trading_limit_dollars}"  # uses subtotal instead of total
+
+    # if the user has attempted to trade more shares than they are allowed to.
+    # uses the shares_total so its easier to understand.
+    if user.shares_exceeds_trade_limit(
+        shares_total): return f"Shares exceed trading limit. \nto buy: {shares_total}\nmax:{trading_limit_shares}"
+
+
+
+    user.modify_account(account_name=account_name, amount=subtotal, buying=True)  # when buying, amount is +, selling, -
+    coin.change_currency_value(v)  # changes the value of the currency
+    user.increase_holding(account_name=account_name, coin_name=coin_name, shares=shares_total)  # modifies the holding
+
+    coin.should_delete()
+    coin.save()
+    user.save()
+
+
+def buying_interval_test(shares:int):
+    # determines the number of intervals when buying work.
+    # takes in a certain number of shares, compares it to shares_per_interval
+    # if it is lower than shares_per_interval, we deduct itself every iteration.
+    # otherwise we deduct by shares_per_interval every iteration
+    # scenarios:
+    #   shares divisible by shares_per_interval. >=
+    #   shares not divisible by shares_per_interval. >
+    #   shares < shares_per_interval                    (dosent matter if divisble anyway)
+    while shares > 0:
+
+        deducted_shares = min(shares_per_interval, shares)
+
+        print("shares: ", shares)
+        print("deducted: ", deducted_shares)
+        print("")
+
+        if shares >= shares_per_interval:
+            shares -= shares_per_interval
+
+        elif shares < shares_per_interval:
+            shares = 0
+
+    print("shares: ", shares)
+    #print("deducted: ", deducted_shares)
+    print("")
 
 if __name__ == '__main__':
     #clear_db() # clears the cryptocurrency db
 
-    coin = CryptoCurrency()
-    user = User(1)
+    coin = CryptoCurrency(CryptoCurrency.load_coin_dict("Reddit-Francs"))
+    coin.value = 0.5
+    coin.save()
 
-    coin.value = 25
+    shares = 100000
 
-    #user.accounts["tfa"]["holdings"][coin.name] = 5
-    #user.save()
-    name = "Ruby-Bags"
-    increase_holding_test(user, "tfa", name, 15) # holding number
-
-    #holding_exists_test(user, account_name="tfa", coin_name=coin.name)
-
-    #user.save()
+    print(buy_test(1, "ntfa", "Reddit-Francs", shares))

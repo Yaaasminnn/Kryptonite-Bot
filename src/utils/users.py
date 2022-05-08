@@ -324,16 +324,17 @@ class User:
         if (self.accounts[account_name]["balance"] + amount) > max_balance: return True
         return False
 
-    def modify_account(self, account_name:str, amount:float):
+    def modify_account(self, account_name:str, amount:float, buying:bool):
         """
         modifies a bank account with the given amount of money.
 
         is called after checking if the user can afford the purchase or sale.
 
-        sales are negative
-        purchases are positive
+        sales are positive
+        purchases are negative
         """
-        self.accounts[account_name]["balance"] += amount
+        if not buying: self.accounts[account_name]["balance"] += amount
+        else: self.accounts[account_name]["balance"] -= amount
 
     @staticmethod
     def calc_tax(account_name:str, subtotal:float):

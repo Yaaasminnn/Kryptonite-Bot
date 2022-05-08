@@ -39,3 +39,6 @@ Experiment with the currencies:
 - make sure they are stable n stuff
 
 Release v1.0
+
+Issues:
+- when buying, shares are bought 50 at a time. however, value has a maximum limit it cannot surpass. when buying, if the value > max_value, it will continue charging the user, however, it will not raise the value at all. meaning the user can potentially pay much more than intended.

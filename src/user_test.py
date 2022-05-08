@@ -61,5 +61,5 @@ def tax_test(account:str, amount:float):
 
 if __name__ == '__main__':
     reload_constants()
-    User.clear_account("1") # clears the user, 1
+    User.clear_account(1) # clears the user, 1
     verify_holdings_test()

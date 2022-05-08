@@ -4,6 +4,7 @@ from random import randint, uniform, choice
 import datetime
 from src.utils.json_utils import *
 from src.utils.math_funcs import *
+from src.constants import *
 crypto_cache = [] # the list of crypto currencies. we use this if we wants to retrieve information on a currency
 
 class CryptoCurrency:
@@ -74,7 +75,15 @@ class CryptoCurrency:
 
     @property
     def market_cap(self): # the market is the total value of all shares
-        return self.value * self.total_shares
+        return min(self.value * self.total_shares, max_market_cap)
+
+    @property
+    def max_value(self):
+        # value cannot be higher than the market_cap / total shares
+        # this is only relevant if the market cap reaches the maximum limit.
+        # this way, value cannot surpass the market cap
+        self.value = min(self.value, self.market_cap / self.total_shares) # prevents the value from surpassing the max_value
+        return self.market_cap / self.total_shares
 
     @staticmethod
     def name_generator()->str:
@@ -171,6 +180,7 @@ class CryptoCurrency:
             todo:
                 consider deleting previous values older than 3 months(2016 entries ago)
         """
+
         db = load_json("db/crypto_currencies.json") # loads up the db containing all currencies
 
         currency = self.obj_to_dict() # transforms the object into a dict to be used
@@ -263,6 +273,12 @@ class CryptoCurrency:
 
         self.Vmax_mag_fluctuate()
 
+    def should_delete(self):
+        # checks if the value dropped below the delete value. if so, delete it
+        # should be used before any saves.
+        if self.value <= self.delete_value:
+            self.delete()
+
     def simulate(self):
         """
         Simulates a cryptocurrency.
@@ -280,9 +296,7 @@ class CryptoCurrency:
 
         self.cache() # caches it
 
-        if self.value <= self.delete_value: # deletes the currency if it loses all value.
-            self.delete()
-            return
+        self.should_delete() # checks if it should be deleted
 
     def spike(self):
         """
@@ -390,6 +404,7 @@ class CryptoCurrency:
             set to 1 so that it may spike. 
             
         This causes value to always increase by a small amount, but if spiking, also by a percentage.
+        lastly, value cannot increase higher than the max value ofc.
         """
         T = self.threshold
         percent = self.value/100
@@ -407,6 +422,7 @@ class CryptoCurrency:
                 return
 
         self.value += sign * (base_factor + (bounds_factor * percent_factor))
+        self.value = min(self.value, self.max_value) # value cannot rise above the maximum value
 
     def fluctuate(self):
         """
@@ -513,7 +529,7 @@ class CryptoCurrency:
         for currency in db["currencies"]:
             if currency["name"] == coin_name: return currency
 
-    def calc_value(self, v:float,shares:int)->float:
+    def calc_value(self, v:float,shares:int, buying:bool)->float:
         """
         Calculates the hypothetical cost of self.value after buying :shares: number of shares
 
@@ -541,9 +557,10 @@ class CryptoCurrency:
             = v + (v^2 * shares/(total_shares * v))
             = v + (v * shares)/total_shares
         """
-        #v = self.value
-        v += (v*shares)/self.total_shares
-        return v
+
+        if buying: v += (v*shares)/self.total_shares
+        else: v -= (v*shares)/self.total_shares
+        return max(v, 0.0) # value cannot fall below 0 but cannot be higher than max_value
 
     def change_currency_value(self, v:float):
         """

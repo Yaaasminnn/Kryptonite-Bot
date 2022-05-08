@@ -3,6 +3,7 @@ import datetime
 
 from utils.crypto_currency import *
 import utils.json_utils
+from src.constants import *
 """
 Tester for the Cryptocurrency class.
 Dev: lvlon-Emperor
@@ -24,11 +25,11 @@ def simulate_notrade(time_period=10080):
     in said loop, load database, load the first currency, simulate it and save, then repeat
     """
 
-    filename = "tests/simulated_no_trade.csv"
+    filename = "simulated_no_trade.csv"
     rows = []
 
     for i in range(time_period):
-        db = src.utils.json_utils.load_json("db/crypto_currencies.json") # loads all currencies
+        db = utils.json_utils.load_json("db/crypto_currencies.json") # loads all currencies
 
         try:
             coin = CryptoCurrency(db["currencies"][0]) # creates the coin
@@ -56,7 +57,7 @@ def simulate_with_trade(time_period=10080):
     for loop that iterates for a given amount of intervals(number of minutes).
     In said loop, load the db, load a currency, trade and simulate it. then repeat.
     """
-    filename = "tests/simulated_with_trade.csv"
+    filename = "simulated_with_trade.csv"
     rows = []
 
     for i in range(time_period):
@@ -111,9 +112,9 @@ def exists_test():
     print(new.exists(name))
 
 if __name__ == '__main__':
-    #clear_db()
+    clear_db()
 
     new = CryptoCurrency()
 
-    #simulate_with_trade(43200)
+    simulate_notrade(43200)
 
