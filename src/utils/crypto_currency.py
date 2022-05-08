@@ -501,17 +501,25 @@ class CryptoCurrency:
                f"Tmax_mag: {self.Tmax_mag}, values: {self.values}"
 
     @staticmethod
-    def exists(name:str):
+    def exists(coin_name:str): # determines if a currency exists in the database
         db = load_json("db/crypto_currencies.json")
         for currency in db["currencies"]:
-            if currency["name"] == name: return currency
+            if currency["name"] == coin_name: return True
         return False
+
+    @staticmethod
+    def load_coin_dict(coin_name:str): # loads a currency given its name.
+        db = load_json("db/crypto_currencies.json")
+        for currency in db["currencies"]:
+            if currency["name"] == coin_name: return currency
 
     def calc_value(self, v:float,shares:int)->float:
         """
         Calculates the hypothetical cost of self.value after buying :shares: number of shares
 
-        will be used when calculating if a user has enough money to make a purchase
+        will be used when calculating if a user has enough money to make a purchase. the value
+        is a seperate variable, v, and not an attribute because this method is called over n over
+        in a loop where self.value is not changed.
 
         Explain the formula:
             based on self.buy()
@@ -526,10 +534,12 @@ class CryptoCurrency:
             delta = percent * value # value increases by the percentage of the market cap * current value
             value = value + delta # add the delta to v
 
-            formula = v + (v * percent) = v + (v * (volume/m_cap)) = v + (v * (v * shares)/m_cap) =
-            v + (v * (v * shares)/(total_shares * v)) =
-            v + (v^2 * shares/(total_shares * v)) =
-            v + (v * shares)/total_shares
+            formula = v + (v * percent)
+            = v + (v * (volume/m_cap))
+            = v + (v * (v * shares)/m_cap)
+            = v + (v * (v * shares)/(total_shares * v))
+            = v + (v^2 * shares/(total_shares * v))
+            = v + (v * shares)/total_shares
         """
         #v = self.value
         v += (v*shares)/self.total_shares
@@ -537,7 +547,9 @@ class CryptoCurrency:
 
     def change_currency_value(self, v:float):
         """
-        Changes the currency value after a purchase/sale
+        Changes the currency value after a purchase/sale.
+
+        Used after we finish calculating a currency's change in value
         """
         self.value = v
 
@@ -554,6 +566,9 @@ class CryptoCurrency:
         return v * shares
 
 def clear_db():
+    """
+    clears the cryptocurrency db
+    """
     db = load_json("db/crypto_currencies.json")
     for currency in db["currencies"]:
         coin = CryptoCurrency(currency)

@@ -6,7 +6,7 @@ issues:
     work with values not divisible by a
 """
 a = 50 # the number of shares we buy at a time. compound value?
-tot_a = 1_000 # the total number of shares to be bought
+tot_a = 50 # the total number of shares to be bought
 s = 1045000 # the total number of shares
 v = 25 # the initial share price. this can be changed
 v_og = 25 # a copy of the initial share price. this will not be changed

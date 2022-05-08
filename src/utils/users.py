@@ -2,26 +2,9 @@ import os
 from src.utils.json_utils import *
 import datetime
 import asyncio
-
-tax_rate, taxed_trading_limit_dollars, tax_free_trading_limit_dollars, \
-trading_limit_shares, max_transfer_limit, start_amount,\
-max_balance = None, None, None, None, None, None, None
-
-def load_constants():
-    """
-    Loads constants that are used.
-
-    These are in a json so they can easily be permanently changed during runtime.
-    """
-    global tax_rate, tax_free_trading_limit_dollars, trading_limit_shares, max_transfer_limit, start_amount, taxed_trading_limit_dollars, max_balance
-    constants = load_json("kryptonite_bot/constants.json")
-    max_transfer_limit = constants["max transfer limit"]
-    trading_limit_shares = constants["trading limit shares"]
-    tax_free_trading_limit_dollars = constants["tax free trading limit dollars"]
-    taxed_trading_limit_dollars = constants["taxed trading limit dollars"]
-    tax_rate = constants["tax rate"]
-    start_amount = constants["start amount"]
-    max_balance = constants["max balance"]
+from src.constants import *
+#from src.constants import tax_rate, taxed_trading_limit_dollars, tax_free_trading_limit_dollars, trading_limit_shares, \
+#    max_transfer_limit, start_amount, max_balance
 
 class User:
     def __init__(self, uid:int):
@@ -328,10 +311,11 @@ class User:
         """
 
         # incase the user owns no shares, return False because they dont have enough to sell.
-        try: existing_shares = self.accounts[account_name]["holdings"][coin_name]
-        except KeyError: return False
+        if not self.holding_exists(account_name=account_name, coin_name=coin_name):
+            return False
+        else:
+            return shares <= self.accounts[account_name]["holdings"][coin_name]
 
-        return self.accounts[account_name]["holdings"][coin_name] >= shares
 
     def balance_exceeds_limit(self, account_name:str, amount:float)->bool:
         """
@@ -363,16 +347,34 @@ class User:
         else:
             return tax_rate * subtotal
 
-    def add_holding(self, account_name:str, coin_name:str, shares:int):
+    def increase_holding(self, account_name:str, coin_name:str, shares:int):
         """
         Adds a holding in. used when buying
 
-        checks if the holding exists, holding_exists()
-        then, adds the number of shares to it
+        checks if the holding exists, holding_exists(). if not, we add it.
+        if it does, we simply add the currenct shares to it
         """
-        self.accounts[account_name]["holdings"][coin_name] = shares
+        if not self.holding_exists(account_name=account_name, coin_name=coin_name):
+            self.accounts[account_name]["holdings"][coin_name] = shares
+            self.accounts[account_name]["num_holdings"] += 1
+        else:
+            self.accounts[account_name]["holdings"][coin_name] += shares
 
-    def remove_holding(self, account_name:str, coin_name:str, shares:int):
+    def holding_exists(self, account_name:str, coin_name:str)->bool:
+        """
+        Checks if a holding exists.
+
+        check account_name for the holding named coin_name. if it exists, return true,
+        else, return false.
+
+        used when buying or selling currencies.
+        """
+        try:
+            holding = self.accounts[account_name]["holdings"][coin_name]
+        except KeyError: return False
+        return True
+
+    def decrease_holding(self, account_name:str, coin_name:str, shares:int):
         """
         removes a holding.
 
@@ -381,5 +383,49 @@ class User:
         reduce the number of shares by amount and if it == 0: remove it
         """
         self.accounts[account_name]["holdings"][coin_name] -= shares
-        if self.accounts[account_name]["holdings"][coin_name] == 0:
+        if self.accounts[account_name]["holdings"][coin_name] <= 0:
             del_dict_key(self.accounts[account_name]["holdings"], coin_name)
+            self.accounts[account_name]["num_holdings"] -=1
+
+    def calc_num_of_intervals(self, shares:int):
+        """
+        determines how many intervals there are when determining the cost
+
+        each interval, we calculate the costs and coin fluctuations 50 shares at a time.
+        however, if there are less than 50 shares left, we must use the remaining shares.
+
+        this function determines how many intervals there will be in total.
+
+        It uses the modulus to determine how far away the number of shares is from being divisible
+        by 50. then it is divided by 50 to determine how many times, 50 fits into the num of shares. this is the quotient
+        Example:
+            70 is not divisible by 50.
+            >>>70 % 50 # = 20
+            >>>70-20 # = 50
+            >>>50/50 # = 1
+            50 fits into 70 1 time, so the function will run at least once.
+
+        Next, it determines if there is a remainder. if so, it will run once more. else, it wont run an extra time
+        Example:
+            >>>70 % 50 # = 20
+            20 != 0
+            remainder = 1
+        Example 2:
+            >>>100 % 50 # = 0
+            0 == 0
+            remainder = 0
+
+        to get the total amount of times run, we just add the quotient and the remainder
+        """
+        remainder:int
+        mod = shares % shares_per_interval # the modulus
+
+        # determines the remainder
+        if mod == 0:
+            remainder = 0
+        else:
+            remainder = 1
+
+        quotient = (shares - mod) / shares_per_interval # determines the quotient
+
+        return quotient + remainder

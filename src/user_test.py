@@ -1,6 +1,7 @@
 from utils.users import *
+from constants import *
 
-def varify_holdings_test():
+def verify_holdings_test():
     # loads up a user instance and verifies if the holdings are verified
     user = User(1)
     user.save()
@@ -59,5 +60,6 @@ def tax_test(account:str, amount:float):
     print(User.calc_tax(account, amount))
 
 if __name__ == '__main__':
-    load_constants()
-    #User.clear_account(1) # clears the user, 1
+    reload_constants()
+    User.clear_account("1") # clears the user, 1
+    verify_holdings_test()

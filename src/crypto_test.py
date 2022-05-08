@@ -24,11 +24,11 @@ def simulate_notrade(time_period=10080):
     in said loop, load database, load the first currency, simulate it and save, then repeat
     """
 
-    filename = "simulated_no_trade.csv"
+    filename = "tests/simulated_no_trade.csv"
     rows = []
 
     for i in range(time_period):
-        db = utils.json_utils.load_json("db/crypto_currencies.json") # loads all currencies
+        db = src.utils.json_utils.load_json("db/crypto_currencies.json") # loads all currencies
 
         try:
             coin = CryptoCurrency(db["currencies"][0]) # creates the coin
@@ -56,7 +56,7 @@ def simulate_with_trade(time_period=10080):
     for loop that iterates for a given amount of intervals(number of minutes).
     In said loop, load the db, load a currency, trade and simulate it. then repeat.
     """
-    filename = "simulated_with_trade.csv"
+    filename = "tests/simulated_with_trade.csv"
     rows = []
 
     for i in range(time_period):
