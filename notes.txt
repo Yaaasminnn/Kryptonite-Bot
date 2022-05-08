@@ -202,3 +202,60 @@ crypto testing:
     jumps: when around 35/65, the value fluctuates by a LOT
     spikes: make sure these spikes are not making the threshold 100+ or 0-
     *Vmax_mag: not too bad, but can make the magnitude become 0. unintuitive. fix
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+trade algo
+
+buy(account_name, coin_name, shares):
+
+  cc.coin exists?
+
+  for:
+    cc.calc_value
+    cc.calc_cost
+  u.calc_tax
+
+  u.has_enough_balance?
+  u.volume_surpasses_trade_limit?
+  u.shares_surpasses_trade_limit?
+
+  u.modify_account
+  cc.coin_fluc
+  u.add_holding
+
+sell(account_name, coin_name, shares):
+
+  cc.coin_exists?
+
+  for:
+    cc.calc_value
+    cc.calc_cost
+    # no taxes on sales
+
+  u.has_enough_shares?    *
+  u.balanc_exceeds_limit  *
+  u.shares_exceed_limit
+  u.volume_exceed_limit
+
+  u.modify_account
+  cc.coin_fluc
+  u.remove_holding
