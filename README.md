@@ -30,6 +30,10 @@
 - - help
 
 # Todo:
+
+- ### finish crypto features
+- - can add shares to the total.
+- - - will be automatically done every month
  
 - ### Experiment with currencies and their stability when trading with charts.
 - - test with the current trade functions 
