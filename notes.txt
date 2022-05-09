@@ -251,7 +251,7 @@ sell(account_name, coin_name, shares):
     cc.calc_cost
     # no taxes on sales
 
-  u.has_enough_shares?    *
+  u.has_enough_shares?
   u.balanc_exceeds_limit  *
   u.shares_exceed_limit
   u.volume_exceed_limit

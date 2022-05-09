@@ -79,11 +79,9 @@ class CryptoCurrency:
 
     @property
     def max_value(self):
-        # value cannot be higher than the market_cap / total shares
-        # this is only relevant if the market cap reaches the maximum limit.
-        # this way, value cannot surpass the market cap
-        self.value = min(self.value, self.market_cap / self.total_shares) # prevents the value from surpassing the max_value
-        return self.market_cap / self.total_shares
+        # the maximum value self.value can ever reach
+        # only relevant when the market cap reaches the limit.
+        return max_market_cap / self.total_shares
 
     @staticmethod
     def name_generator()->str:
@@ -560,7 +558,7 @@ class CryptoCurrency:
 
         if buying: v += (v*shares)/self.total_shares
         else: v -= (v*shares)/self.total_shares
-        return max(v, 0.0) # value cannot fall below 0 but cannot be higher than max_value
+        return min(self.max_value, max(v, 0.0)) # value cannot fall below 0 but cannot be higher than max_market_cap / total shares
 
     def change_currency_value(self, v:float):
         """

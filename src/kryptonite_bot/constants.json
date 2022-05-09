@@ -1,11 +1,11 @@
 {
   "max transfer limit": 50000,
   "trading limit shares": 500000,
-  "taxed trading limit dollars": 10e11,
+  "taxed trading limit dollars": 1e12,
   "tax free trading limit dollars": 100000,
   "tax rate": 1.12,
   "start amount": 200,
-  "max balance": 10e99,
-  "max market cap": 10e299,
+  "max balance": 1e100,
+  "max market cap": 1e300,
   "shares per interval": 50
 }

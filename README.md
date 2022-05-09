@@ -4,42 +4,63 @@
 
 # Features:
 
- Users can buy, sell, monitor and trade currency/cryptocurrency.
+- Users can buy, sell, monitor and trade currency/cryptocurrency.
 
-Can transfer money among eachother as well.
+- Can transfer money among eachother as well.
 
-Cryptocurrencies are dynamically generated, and deleted
+- Cryptocurrencies are dynamically generated, and deleted
 
-Users can view the history of the currencies on a graph. (predictions made by the pc?)
+- Users can view the history of the currencies on a graph. 
+- - (predictions made by the pc?)
 
+# Commands
+- ### User-based
+- - bal
+- - init
+- - holdings
+- - transfer
+- - bank deposit/withdraw
+- ### Crypto-based
+- - buy/sell
+- - view (name)
+- - history
+- ### Other/lotto
+- - lotto commands (higher, lower, betting etc)
+- - daily
+- - help
 
 # Todo:
  
-Experiment with currencies and their stability when trading with charts.
+- ### Experiment with currencies and their stability when trading with charts.
+- - test with the current trade functions 
+- - test with all the max constants(need to resolve the json issue)
 
-Add in the discord bot boilerplate.
-- Asyncronize the backend
-- cache currencies and relaod constants every minute
+- ### Add in the discord bot boilerplate.
+- - Asyncronize the backend
+- - cache currencies and relaod constants every minute
+- - front end(lots of embeds)
+- - - prob not in 1.0 
+- - Crypto currency and "Other" functionality
+- - - dynamically adds currencies 
 
-front end(lots of embeds)
+- ### deploy to the rpi
+- - backup script(for the database)
+- - - log onscreen as well as to files?
+- - - - or just other things to log? 
+- - - have the pi use rsync and crontab?
+- - - backup to my pc? local? cloud?
 
-Create webpages (not in 1.0)
-- show info on any currency
--  show info on a user?
+- ### Create webpages (not in 1.0)
+- - show info on any currency
+- - show info on a user?
     
-Currency history can be seen via a visual graph (not in 1.0)
+- ### Currency history can be seen via a visual graph (not in 1.0)
 
-Gambling features (not in 1.0, but will be added ASAP)
+- ### Gambling features (not in 1.0, but will be added ASAP)
 
-backup script(for the database)
-- have the pi use rsync and crontab?
-- backup to my pc? local? cloud?
+- ### Release v1.0
 
-Experiment with the currencies:
-- make sure they are stable n stuff
-
-Release v1.0
-
-Issues:
-- when buying, shares are bought 50 at a time. however, value has a maximum limit it cannot surpass. when buying, if the value > max_value, it will continue charging the user, however, it will not raise the value at all. meaning the user can potentially pay much more than intended.
-- however, there are already limits onhow much a user can buy, so this is probably not a serious issue
+# Issues:
+- at arbitrarily large values, python seems to round the numbers to '1e+X'
+- the issue seems to be json losing precision for higher values, but that wont be fixed by the initial release
+- idea: convert it to scientific notation?

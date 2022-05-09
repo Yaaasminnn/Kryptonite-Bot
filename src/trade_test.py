@@ -15,6 +15,9 @@ def load_dict_test(coin_name:str):
 
 def calc_value_test(coin:CryptoCurrency, shares:int, buying:bool):
     # calculates the value after buying a few shares
+    # scenarios:
+    #   selling     value drops below 0
+    #   buying      value reaches max_market cap / total_shares
     print(coin.calc_value(coin.value,shares, buying))
 
 def calc_cost_test(coin:CryptoCurrency, shares:int, buying:bool):
@@ -99,6 +102,25 @@ def decrease_holding_test(user:User, account_name:str, coin_name:str, shares:int
     user.decrease_holding(account_name, coin_name, shares)
     user.save()
 
+def has_enough_shares_test(user:User, account_name:str, coin_name:str, shares:int):
+    # scenarios:
+    #   doe not have a holding
+    #   has a holing, not enough
+    #   has a aholding, enough
+    print(user.has_enough_shares(account_name, coin_name, shares))
+
+def balance_exceeds_limit_test(user:User, account_name:str ,amount:float):
+    # scenarios:
+    #   does not exceed limit
+    #   does
+    print(user.balance_exceeds_limit(account_name, amount))
+
+def cap_balance_test(user:User, account_name:str ,amount:float):
+    # scenarios
+    #   balance < limit
+    # balance >= limit
+    print(user.cap_balance(account_name, amount))
+
 def buy_test(uid, account_name:str, coin_name:str, shares:int):
     # buying the currency.
     # checks if the currency exists first, if not return. if it does, load it up
@@ -108,13 +130,9 @@ def buy_test(uid, account_name:str, coin_name:str, shares:int):
     # this is if the coin's value reaches 0 or passes the maximum limit
     # afterward, it simply calculates the total and modifies the user and currency data
     # scenarios:
-    #    value is driven <=0
-    #
-    #
-    #
-    #
-    #
-    #
+    #    value is driven beyond max limit. to test this, set the max_market_cap 10 10k, total_shares to 100 and value to 100 or slightly lower
+
+
 
     user = User(uid) # loads up the user instance
 
@@ -131,7 +149,10 @@ def buy_test(uid, account_name:str, coin_name:str, shares:int):
     shares_traded = 0 # keeps track of the number of shares u traded
     v= coin.value
     shares_total = shares # keeps track of the total number of shares
-    while (shares > 0 and (v > coin.delete_value)): # determine how many times this runs. this section's "shares" will be replaced
+    # determine how many times this runs. this section's "shares" will be replaced
+    # runs so long as the value dosent crash nor rise beyond the max_value
+    # also while the shares > 0 as they are deducted every iteration
+    while (shares > 0 and (v > coin.delete_value and v < coin.max_value)):
 
         deducted_shares = min(shares_per_interval, shares)
 
@@ -145,29 +166,30 @@ def buy_test(uid, account_name:str, coin_name:str, shares:int):
             shares = 0
 
         shares_traded += deducted_shares
+        print("shares: ", shares, "\nvalue: ", v, "\nshares traded: ", shares_traded, "\nsubtotal: ",subtotal, "\nmax: ", coin.max_value,"\n")
 
     total = user.calc_tax(account_name=account_name, subtotal=subtotal) # the total including taxes
-    #print(v, total)
+    print("total", total)
+
+
+    # a number of checks for:
+    if not user.has_enough_balance(account_name=account_name, cost=total): # if the user cannot afford to pay
+        return f"Does not have enough money\nHas: {user.accounts[account_name]['balance']}.\n needs: {total}"
+
+    if user.volume_exceeds_trade_limit(account_name=account_name, volume=subtotal): # if the volume of the purchase exceeds the limit
+        # uses subtotal instead of total
+        return f"subtotal exceeds trading limit\nsubtotal: {subtotal}\nlimit: {taxed_trading_limit_dollars} {tax_free_trading_limit_dollars}"
+
+
+    if user.shares_exceeds_trade_limit(shares_total): # if the user has attempted to trade more shares than they are allowed to.
+        # uses the shares_total
+        return f"Shares exceed trading limit. \nto buy: {shares_total}\nmax:{trading_limit_shares}"
 
 
 
-    # a number of extra checks to make sure the trade is valid------------
-
-    # if the user cannot afford to pay
-    if not user.has_enough_balance(account_name=account_name, cost=total): return f"Does not have enough money\nHas: {user.accounts[account_name]['balance']}.\n needs: {total}"
-
-    # if the volume of the purchase exceeds the limit
-    if user.volume_exceeds_trade_limit(account_name=account_name, volume=subtotal): return f"subtotal exceeds trading limit\nsubtotal: {subtotal}\nlimit: {taxed_trading_limit_dollars} {tax_free_trading_limit_dollars}" # uses subtotal instead of total
-
-    # if the user has attempted to trade more shares than they are allowed to.
-    # uses the shares_total so its easier to understand.
-    if user.shares_exceeds_trade_limit(shares_total): return f"Shares exceed trading limit. \nto buy: {shares_total}\nmax:{trading_limit_shares}"
-
-
-
-    user.modify_account(account_name=account_name, amount=total, buying=True) # when buying, amount is +, selling, -
+    user.modify_account(account_name=account_name, amount=-total) # when buying, amount is +, selling, -
     coin.change_currency_value(v) # changes the value of the currency
-    user.increase_holding(account_name=account_name, coin_name=coin_name, shares=shares_total) # modifies the holding
+    user.increase_holding(account_name=account_name, coin_name=coin_name, shares=shares_traded) # modifies the holding
 
     coin.should_delete()
     coin.save()
@@ -195,11 +217,12 @@ def sell_test(uid, account_name:str, coin_name:str, shares:int):
     shares_traded = 0  # keeps track of the number of shares u traded
     v = coin.value
     shares_total = shares  # keeps track of the total number of shares
-    while (shares > 0 and ( v > coin.delete_value)):  # determine how many times this runs. this section's "shares" will be replaced
+    print("init value: ", v)
+    while (shares > 0 and (v > coin.delete_value and v < coin.max_value)):  # determine how many times this runs. this section's "shares" will be replaced
 
         deducted_shares = min(shares_per_interval, shares)
 
-        v = coin.calc_value(v, deducted_shares, buying=True)  # given the number of shares, calculates the new value of v
+        v = coin.calc_value(v, deducted_shares, buying=False)  # given the number of shares, calculates the new value of v
         subtotal += coin.calc_cost(v, deducted_shares)  # calculates the subtotal given v and the number of shares
 
         if shares >= shares_per_interval:
@@ -209,34 +232,34 @@ def sell_test(uid, account_name:str, coin_name:str, shares:int):
             shares = 0
 
         shares_traded += deducted_shares
+        print("shares: ", shares, "\nvalue: ", v, "\nshares traded: ", shares_traded, "\nsubtotal: ", subtotal,"\n")
 
 
 
     # a number of extra checks to make sure the trade is valid------------
 
-    # if the user cannot afford to pay
-    if not user.has_enough_balance(account_name=account_name,
-                                   cost=subtotal): return f"Does not have enough money\nHas: {user.accounts[account_name]['balance']}.\n needs: {subtotal}"
-
-    # if the volume of the purchase exceeds the limit
-    if user.volume_exceeds_trade_limit(account_name=account_name,
-                                       volume=subtotal): return f"subtotal exceeds trading limit\nsubtotal: {subtotal}\nlimit: {taxed_trading_limit_dollars} {tax_free_trading_limit_dollars}"  # uses subtotal instead of total
-
-    # if the user has attempted to trade more shares than they are allowed to.
-    # uses the shares_total so its easier to understand.
-    if user.shares_exceeds_trade_limit(
-        shares_total): return f"Shares exceed trading limit. \nto buy: {shares_total}\nmax:{trading_limit_shares}"
+    if not user.has_enough_shares(account_name=account_name, coin_name=coin_name, shares=shares_total):
+        # uses shares_total
+        return f"not enough shares to sell\nto sell: {shares_total}\nhas: {user.accounts[account_name]['holdings'][coin_name]}"
 
 
+    if user.volume_exceeds_trade_limit(account_name=account_name,volume=subtotal): # if the volume of the purchase exceeds the limit
+        # uses subtotal instead of total
+        return f"subtotal exceeds trading limit\nsubtotal: {subtotal}\nlimit: {taxed_trading_limit_dollars} {tax_free_trading_limit_dollars}"
 
-    user.modify_account(account_name=account_name, amount=subtotal, buying=True)  # when buying, amount is +, selling, -
+    if user.shares_exceeds_trade_limit(shares_total): # if the user has attempted to trade more shares than they are allowed to.
+        # uses the shares_total
+        return f"Shares exceed trading limit. \nto buy: {shares_total}\nmax:{trading_limit_shares}"
+
+
+    user.cap_balance(account_name=account_name, amount=subtotal) # sets the new balance. if it passes the limit, it caps it
+    #user.modify_account(account_name=account_name, amount=subtotal)  # when buying, amount is +, selling, -
     coin.change_currency_value(v)  # changes the value of the currency
-    user.increase_holding(account_name=account_name, coin_name=coin_name, shares=shares_total)  # modifies the holding
+    user.decrease_holding(account_name=account_name, coin_name=coin_name, shares=shares_traded)  # modifies the holding
 
     coin.should_delete()
     coin.save()
     user.save()
-
 
 def buying_interval_test(shares:int):
     # determines the number of intervals when buying work.
@@ -268,10 +291,17 @@ def buying_interval_test(shares:int):
 if __name__ == '__main__':
     #clear_db() # clears the cryptocurrency db
 
-    coin = CryptoCurrency(CryptoCurrency.load_coin_dict("Reddit-Francs"))
-    coin.value = 0.5
-    coin.save()
+    #coin = CryptoCurrency()
+    #coin.value = 99
+    #coin.total_shares = 100
+    #coin.save()
 
-    shares = 100000
+    shares = 500000
 
-    print(buy_test(1, "ntfa", "Reddit-Francs", shares))
+    #calc_value_test(coin, shares=shares, buying=True)
+
+    print(buy_test(1, "ntfa", "Fake-Dubloons", shares))
+
+    #cap_balance_test(User(1), "ntfa", amount=100)
+
+    #print(sell_test(1, "ntfa", "Fake-Dubloons", shares=shares))

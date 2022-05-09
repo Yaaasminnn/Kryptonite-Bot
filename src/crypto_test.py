@@ -23,6 +23,9 @@ def simulate_notrade(time_period=10080):
 
     for loop that iterates for 43200 intervals(number of minutes in a month).
     in said loop, load database, load the first currency, simulate it and save, then repeat
+
+    scenarios:
+        value reaching self.max_value
     """
 
     filename = "simulated_no_trade.csv"
@@ -32,7 +35,7 @@ def simulate_notrade(time_period=10080):
         db = utils.json_utils.load_json("db/crypto_currencies.json") # loads all currencies
 
         try:
-            coin = CryptoCurrency(db["currencies"][0]) # creates the coin
+            coin = CryptoCurrency(db["currencies"][0])  # creates the coin
             coin.simulate() # simulates the coin
 
             rows.append([ # appends the values to the rows
@@ -56,6 +59,9 @@ def simulate_with_trade(time_period=10080):
 
     for loop that iterates for a given amount of intervals(number of minutes).
     In said loop, load the db, load a currency, trade and simulate it. then repeat.
+
+    stress test:
+        when buying pushes the value above the max limit
     """
     filename = "simulated_with_trade.csv"
     rows = []
@@ -67,8 +73,8 @@ def simulate_with_trade(time_period=10080):
             # trades
             purchase = 0
             sale=0
-            buyshares = randint(1_000,50_000)
-            sellshares = randint(1_000, 50_000)
+            buyshares = randint(100,1000)
+            sellshares = randint(100, 1000)
             if randint(0,1440)==1: purchase =coin_buy(buyshares, coin)
             if randint(0,1440)==1: sale =coin_sell(sellshares, coin)
 
@@ -114,7 +120,11 @@ def exists_test():
 if __name__ == '__main__':
     clear_db()
 
-    new = CryptoCurrency()
+    """new = CryptoCurrency()
+    new.total_shares = 100     # only when stressing the max value
+    new.save()
+    new.cache()   # caching is necessary to update the cryptocache
+    print(crypto_cache)
 
-    simulate_notrade(43200)
+    simulate_with_trade(43200)"""
 

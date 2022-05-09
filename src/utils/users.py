@@ -21,15 +21,15 @@ class User:
         """
 
         try: # assuming the user exists in the database, just load them l=normally
-            user = load_json(f"db/users/{uid}.json")
+            user = load_json(f"src/db/users/{uid}.json")
             self.uid = uid
             self.wallet = user["wallet"]
             self.accounts = user["accounts"]
             self.last_accessed = user["last_accessed"]
 
         except: # if they dont exist, create them
-            create_json(f"db/users/{uid}.json") # creates the user
-            user = load_json(f"db/users/{uid}.json")
+            create_json(f"src/db/users/{uid}.json") # creates the user
+            user = load_json(f"src/db/users/{uid}.json")
             self.uid = uid
             self.wallet = start_amount
             self.create_accounts() # creates all accounts
@@ -97,7 +97,7 @@ class User:
 
     @staticmethod
     def clear_account(uid:int): # removes a user
-        os.remove(f"db/users/{uid}.json")
+        os.remove(f"src/db/users/{uid}.json")
 
     def dict_to_obj(self):pass
 
@@ -107,7 +107,7 @@ class User:
         """
         user = self.obj_to_dict() # transforms the object to a dict
 
-        update_json(f"db/users/{self.uid}.json", user)
+        update_json(f"src/db/users/{self.uid}.json", user)
 
     def verify_holdings(self):
         """
@@ -116,7 +116,7 @@ class User:
         runs through all holdings in both accounts. for every token in the holdings,
         check if it exists in the database. if not, delete it from the holdings.
         """
-        crypto_db = load_json("db/crypto_currencies.json")
+        crypto_db = load_json("src/db/crypto_currencies.json")
         not_in_db=[]
         accounts = ["tfa", "ntfa"]
 
@@ -162,93 +162,21 @@ class User:
         self.wallet -=amount
         self.accounts[account_name]["balance"] += amount
 
+        return f"Deposited ${amount} into {account_name} account successfully"
+
     def bank_withdraw(self, amount:float, account_name:str):
         """
         Withdraws money from the bank account to the user's wallet.
 
         No limits on how often/how much can be withdrawn.
         """
-        # determines which account
-        if account_name == "tfa": account_index = 1
-        else: account_index = 0
-
         if amount > self.accounts[account_name]["balance"]: # cannot exceed existing funds
             return f"Insufficient bank balance.\nBalance: {self.accounts[account_name]['balance']}\nNeeded: {amount}"
 
         self.accounts[account_name]["balance"] -= amount
         self.wallet += amount
 
-    def c_buy(self, account_name:str, num:int, token_val:int, token_name:str):
-        """
-        Buy function. Modifies the user's balance.
-
-        When buying the account's balance in decreased by the number of shares * the value of each token multiplied by
-        the tax rate.
-
-        First determines which account you are using. Tax free(tfa) or regular(ntfa). from there it determines the volume
-        of the purchase with and without taxes as well as the tax rates. If the volume of the purchase without tax
-        exceeds the trading limit(dollars), the order will be cancelled. also, if the volume(tax included) is greater
-        than what the user has in their account, it will be cancelled as well. If a transfer goes through, deduct the
-        money and add the holding to the account.
-
-        Any other checks(currency exists, account exists, not exceeding the amount of shares.) will be handled in the
-        bot's async method.
-        """
-
-        # determines which account to use. and calculates the value.
-        if account_name == "tfa":
-            account_index = 1
-            volume = num*token_val
-            volume_no_tax = volume
-            if volume_no_tax > tax_free_trading_limit_dollars:  # the user cannot transfer more than the trading limit
-                return f"Amount exceeds trading limit\nLimit: {tax_free_trading_limit_dollars}\nYour amount(without tax): {volume_no_tax}"
-        else:  # if its a taxed account, tax them
-            account_index = 0
-            volume = tax_rate * (num*token_val) # the volume is calculated with tax
-            volume_no_tax = volume/tax_rate
-            if volume_no_tax > taxed_trading_limit_dollars:  # the user cannot transfer more than the trading limit
-                return f"Amount exceeds trading limit\nLimit: {taxed_trading_limit_dollars}\nYour amount(without tax): {volume_no_tax}"
-
-
-        # checks if the user's account balance is >= the volume of the purchase
-        if self.accounts[account_index]["balance"] < volume:
-            return f"Insufficient balance.\nBalance: {self.accounts[account_index]['balance']}\nNeeded: {volume}"
-
-        # subtracts volume from the bank balance
-        self.accounts[account_index]["balance"] -= volume
-
-        # Adds the holdings to the account. if the holding does not exist, create it
-        if token_name not in self.user["accounts"][account_index]["holdings"]:
-            self.user["accounts"][account_index]["holdings"][token_name] = 0
-            self.user["accounts"][account_index]["num_holdings"] +=1
-        self.user["accounts"][account_index]["holdings"][token_name]+=num
-
-    def c_sell(self, account_name:str, num:float, token_val:int, token_name:str):
-        """
-        Sell function. Modifies the user's account balance
-
-        When selling, the account's balance is increased by the num_shares*token_val.
-        additionally, the holding is decreased. if the holding volume reaches 0, the holding is deleted.
-        """
-        # determines which account to use.
-        if account_name == "tfa": account_index = 1
-        else: account_index = 0
-
-        # checks that the user has enough shares to sell. if not generate an error code.
-        shares_owned = self.user["accounts"][account_index]["holdings"][token_name]
-        if num > shares_owned:
-            return f"number of shares to sell exceeds number of shares owned.\nto sell: {num}\nowned:{shares_owned}"
-
-        # adds the money to the bank balance
-        self.user["accounts"][account_index]["balance"] += num*token_val # we take the min to ensure they dont sell more than they have
-
-        # subtracts the number of shares sold from the account's holdings
-        self.user["accounts"][account_index]["holdings"][token_name] -= num
-
-        # if the number of owned tokens reach 0, remove it
-        if self.user["accounts"][account_index]["holdings"][token_name] == 0:
-            del_dict_key(self.user["accounts"][account_index]["holdings"], key=token_name)
-            self.user["accounts"][account_index]["num_holdings"] -=1
+        return f"Withdrew ${amount} from {account_name} account successfully"
 
     def wallet_modify(self): pass
 
@@ -272,7 +200,9 @@ class User:
         recipient = User(uid) # loads the recipient
         self.wallet -=amount
         recipient.wallet += amount
+
         recipient.save()
+        return f"Transfer sent successfully"
 
     def shares_exceeds_trade_limit(self, shares:int)->bool:
         """
@@ -324,7 +254,26 @@ class User:
         if (self.accounts[account_name]["balance"] + amount) > max_balance: return True
         return False
 
-    def modify_account(self, account_name:str, amount:float, buying:bool):
+    def cap_balance(self, account_name:str, amount:float):
+        """
+        If the user's balance would exceed the max balance, set their balance to the max balance
+
+        checks if the balance exceeds limit with user.balance_exceeds_limit(). if true, set balance to the max.
+        otherwise, dont do anything
+        """
+        if self.balance_exceeds_limit(account_name, amount):
+            self.accounts[account_name]["balance"] = max_balance
+
+            """elif self.accounts[account_name]["balance"] + amount <=0:
+            self.accounts[account_name]["balance"] = 0.0"""
+
+        else: self.modify_account(account_name, amount)
+
+        return self.accounts[account_name]["balance"]
+
+
+
+    def modify_account(self, account_name:str, amount:float):
         """
         modifies a bank account with the given amount of money.
 
@@ -333,8 +282,7 @@ class User:
         sales are positive
         purchases are negative
         """
-        if not buying: self.accounts[account_name]["balance"] += amount
-        else: self.accounts[account_name]["balance"] -= amount
+        self.accounts[account_name]["balance"] += amount
 
     @staticmethod
     def calc_tax(account_name:str, subtotal:float):
