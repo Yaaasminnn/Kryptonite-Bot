@@ -168,7 +168,6 @@ async def view(ctx, coin_name:str): # view info on a specific currency
             break
     await ctx.send(msg)
 
-
 @bot.command(aliases=["l"])
 async def list(ctx): # view a list of all currencies and their values
     """
@@ -194,11 +193,15 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
     then we can make the purchase and save.
 
     When calculating the value, it is compounded. we calculate the value of the currency and purchase 50 shares at a time.
-    
+    This way, the cost of the purchase is more accurate and higher than if it was all calculated in 1 sitting.
+    we have temp variables like v and shares_traded so we know how much has been traded so far.
+    v is gradually increased every iteration and after the loop, is assigned to coin.value. meanwhile, shares_traded is
+    in case the value crashes or reaches the maximum value before it finishes calculations. this way, the value does not
+    go out of hand and the user is not charged unjustly.
     """
 
     if shares <1: # ensures the number of shares bought is at least 1
-        ctx.send("You must purchase at least 1 share.")
+        await ctx.send("You must purchase at least 1 share.")
         return
 
     shares = floor(shares) # makes sure all shares bought are int. not float.
@@ -206,24 +209,162 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
     user = User(ctx.author.id) # loads the user
 
     if not CryptoCurrency.exists(coin_name): # checks if the coin exists. if so, load up the coin
-        ctx.send(f"Crypto curency: {coin_name} does not exist")
+        await ctx.send(f"Crypto curency: {coin_name} does not exist")
         return
     else:
         coin = CryptoCurrency(CryptoCurrency.load_coin_dict(coin_name))
+
+
 
     # calculates the volume of the purchase
     subtotal = 0
     shares_traded = 0 # keeps track of the number of shares you buy
     v = coin.value # v keeps track of the value as we calculate the purchase
     shares_total = shares # the total number of shares bought
-    # every iteraction of the loop, shares is decremented by at most, 50.
     # so as long as shares > 0, this loop will continue to run. or so long as the value dosent crash or surpass the
     # maximum value.
+    while (shares > 0 and v> coin.delete_value and v < coin.max_value):
+
+        deduted_shares = min(shares_per_interval, shares) # the number of shares we calculate per iteration
+
+        v = coin.calc_value(v, deduted_shares, buying=True) # given the number of shares, calculate the new v
+        subtotal += coin.calc_cost(v, deduted_shares) # calculates the subtotal given v and the number of shares
+
+        shares -= deduted_shares # subtracts the number of shares we used this iteration
+        shares_traded += deduted_shares # increment the number of shares traded
+
+    # calculates the total. including taxes if applicable
+    total = user.calc_tax(account_name=account_name, subtotal=subtotal)
 
 
+
+    # a number of checks to ensure the purchase is valid
+    if not user.has_enough_balance(account_name=account_name, cost=total): # if the user cannot afford to pay
+        await ctx.send(f"Does not have enough money\n"
+                 f"Has: {user.accounts[account_name]['balance']}\n"
+                 f"needs: {total}")
+        return
+
+    if user.volume_exceeds_trade_limit(account_name=account_name, volume=subtotal): # if the volume of the purchase exceeds the limit
+        # uses subtotal instead of total
+        await ctx.send(f"subtotal exceeds trading limit\n"
+                 f"subtotal: {subtotal}\n"
+                 f"limit: {taxed_trading_limit_dollars if account_name=='ntfa' else tax_free_trading_limit_dollars}")
+        return
+
+    if user.shares_exceeds_trade_limit(shares_total): # if the user has attempted to trade more shares than they are allowed to.
+        # uses the shares_total
+        await ctx.send(f"Shares exceed trading limit. \n"
+                 f"to buy: {shares_total}\n"
+                 f"max:{trading_limit_shares}")
+        return
+
+    # if all those checks are passed, then make the purchase
+    user.modify_account(account_name=account_name, amount=-total) # when buying, amount is (-)
+    coin.change_currency_value(v) # changes the value of the currency
+    user.increase_holding(account_name=account_name, coin_name=coin_name, shares=shares_traded) # modifies the holding
+
+
+
+    coin.should_delete() # checks if the coin has crashed.
+
+    # saves
+    coin.save()
+    user.save()
+
+    await ctx.send(f"Successfully purchased {shares_traded} coin/s of {coin_name} for ${total}")
 
 @bot.command(aliases=["s"])
-async def sell(ctx, account_name:str, coin_name:str, shares:int): pass # sell a currency
+async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a currency
+    """
+    Sells shares of a cryptocurrency.
+
+    Checks if the number of shares is a non-zero positive number greater than 1. if not, return. if the shares are valid,
+    we check if the currency exists in the cache. If it does, we can calculate the value of the sale,
+    how much the coin will now cost, and what the total with taxes will be.
+    Finally, we make some final checks to see if the sale is valid. (has enough shares, dosent exceed limits)
+    then we can make the sale and save.
+
+    When calculating the value, it is compounded. we calculate the value of the currency and sales 50 shares at a time.
+    This way, the cost of the sale is more accurate than if it was all calculated in 1 sitting.
+    we have temp variables like v and shares_traded so we know how much has been traded so far.
+    v is gradually increased every iteration and after the loop, is assigned to coin.value. meanwhile, shares_traded is
+    in case the value crashes or reaches the maximum value before it finishes calculations. this way, the value does not
+    go out of hand and the user is not charged unjustly.
+    """
+    if shares <1: # ensures the number of shares bought is at least 1
+        await ctx.send("You must purchase at least 1 share.")
+        return
+
+    shares = floor(shares) # makes sure all shares bought are int. not float.
+
+    user = User(ctx.author.id) # loads the user
+
+    if not CryptoCurrency.exists(coin_name): # checks if the coin exists. if so, load up the coin
+        await ctx.send(f"Crypto curency: {coin_name} does not exist")
+        return
+    else:
+        coin = CryptoCurrency(CryptoCurrency.load_coin_dict(coin_name))
+
+
+
+    # calculates the volume of the purchase
+    subtotal = 0
+    shares_traded = 0 # keeps track of the number of shares you buy
+    v = coin.value # v keeps track of the value as we calculate the purchase
+    shares_total = shares # the total number of shares bought
+    # so as long as shares > 0, this loop will continue to run. or so long as the value dosent crash or surpass the
+    # maximum value.
+    while (shares > 0 and v> coin.delete_value and v < coin.max_value):
+
+        deduted_shares = min(shares_per_interval, shares) # the number of shares we calculate per iteration
+
+        v = coin.calc_value(v, deduted_shares, buying=True) # given the number of shares, calculate the new v
+        subtotal += coin.calc_cost(v, deduted_shares) # calculates the subtotal given v and the number of shares
+
+        shares -= deduted_shares # subtracts the number of shares we used this iteration
+        shares_traded += deduted_shares # increment the number of shares traded
+
+
+
+    # a number of extra checks to make sure the trade is valid
+    if not user.has_enough_shares(account_name=account_name, coin_name=coin_name, shares=shares_total):
+        # uses shares_total
+        await ctx.send(f"not enough shares to sell\n"
+                 f"to sell: {shares_total}\n"
+                 f"has: {user.accounts[account_name]['holdings'][coin_name]}")
+        return
+
+    # if the volume of the purchase exceeds the limit
+    if user.volume_exceeds_trade_limit(account_name=account_name,volume=subtotal):
+        # uses subtotal instead of total
+        await ctx.send(f"subtotal exceeds trading limit\n"
+                 f"subtotal: {subtotal}\n"
+                 f"limit: {taxed_trading_limit_dollars if account_name=='ntfa' else tax_free_trading_limit_dollars}")
+        return
+
+    # if the user has attempted to trade more shares than they are allowed to.
+    if user.shares_exceeds_trade_limit(shares_total):
+        # uses the shares_total
+        ctx.send(f"Shares exceed trading limit. \n"
+                 f"to buy: {shares_total}\n"
+                 f"max:{trading_limit_shares}")
+        return
+
+    # sets the new balance. if it passes the limit, it caps it
+    user.cap_balance(account_name=account_name,amount=subtotal)
+    coin.change_currency_value(v)  # changes the value of the currency
+    user.decrease_holding(account_name=account_name, coin_name=coin_name,shares=shares_traded)  # modifies the holding
+
+
+
+    coin.should_delete()  # checks if the coin has crashed.
+
+    # saves
+    coin.save()
+    user.save()
+
+    await ctx.send(f"Successfully sold {shares_traded} coin/s of {coin_name} for ${subtotal}")
 
 
 # Run command and all the subprocesses

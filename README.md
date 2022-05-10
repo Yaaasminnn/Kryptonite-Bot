@@ -47,6 +47,7 @@
 - - - prob not in 1.0 
 - - Crypto currency and "Other" functionality
 - - - dynamically adds currencies 
+- - - simulates them
 - - protection against bots
 - - make everything from floats to ints/100
 
@@ -69,5 +70,6 @@
 
 # Issues:
 - at arbitrarily large values, python seems to round the numbers to '1e+X'
-- the issue seems to be json losing precision for higher values, but that wont be fixed by the initial release
-- idea: convert it to scientific notation?
+- - the issue seems to be json losing precision for higher values, but that wont be fixed by the initial release
+- - idea: convert it to scientific notation?
+- Cooldown message not appearing
