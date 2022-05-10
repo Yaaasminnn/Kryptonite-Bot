@@ -117,14 +117,15 @@ def exists_test():
     name = new.name
     print(new.exists(name))
 
+def load_db_into_cache_test():
+    load_db_into_cache()
+    pretty_print(crypto_cache[0])
+    pretty_print(crypto_cache[1])
+
 if __name__ == '__main__':
-    clear_db()
+    #clear_db()
 
-    """new = CryptoCurrency()
-    new.total_shares = 100     # only when stressing the max value
-    new.save()
-    new.cache()   # caching is necessary to update the cryptocache
-    print(crypto_cache)
+    load_db_into_cache_test()
 
-    simulate_with_trade(43200)"""
+
 

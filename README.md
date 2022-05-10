@@ -23,9 +23,10 @@
 - ### Crypto-based
 - - buy/sell
 - - view (name)
-- - history
+- - list currencies
+- - history (1.1?)
 - ### Other/lotto
-- - lotto commands (higher, lower, betting etc)
+- - lotto commands (higher, lower, betting etc) (1.1)
 - - daily
 - - help
 
@@ -46,6 +47,8 @@
 - - - prob not in 1.0 
 - - Crypto currency and "Other" functionality
 - - - dynamically adds currencies 
+- - protection against bots
+- - make everything from floats to ints/100
 
 - ### deploy to the rpi
 - - backup script(for the database)

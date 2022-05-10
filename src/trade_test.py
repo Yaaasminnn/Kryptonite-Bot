@@ -290,18 +290,19 @@ def buying_interval_test(shares:int):
 
 if __name__ == '__main__':
     #clear_db() # clears the cryptocurrency db
+    load_db_into_cache()
 
     #coin = CryptoCurrency()
     #coin.value = 99
     #coin.total_shares = 100
     #coin.save()
 
-    shares = 500000
+    shares = 5000
 
     #calc_value_test(coin, shares=shares, buying=True)
 
-    print(buy_test(1, "ntfa", "Fake-Dubloons", shares))
+    #print(buy_test(1, "ntfa", "Fake-Dubloons", shares))
 
     #cap_balance_test(User(1), "ntfa", amount=100)
 
-    #print(sell_test(1, "ntfa", "Fake-Dubloons", shares=shares))
+    print(sell_test(1, "ntfa", "Fake-Dubloons", shares=shares))

@@ -7,6 +7,13 @@ from src.utils.math_funcs import *
 from src.constants import *
 crypto_cache = [] # the list of crypto currencies. we use this if we wants to retrieve information on a currency
 
+def load_db_into_cache(): # loads all currencies into the crypto cache
+    db = load_json("src/db/crypto_currencies.json")
+    for currency_dict in db["currencies"]:
+        #pretty_print(currency_dict)
+        crypto_cache.append(currency_dict)
+    #pretty_print(crypto_cache)
+
 class CryptoCurrency:
     def __init__(self, currency:dict=None):
         """
@@ -90,7 +97,7 @@ class CryptoCurrency:
 
             Loads up data from db/crypto_names.json and randomly chooses a prefix and suffix and returns them.
         """
-        names = load_json("db/crypto_names.json")
+        names = load_json("src/db/crypto_names.json")
         prefix = choice(names["prefixes"])
         suffix = choice(names["suffixes"])
         return prefix+"-"+suffix
@@ -102,7 +109,7 @@ class CryptoCurrency:
 
         Used when generating a new cryptocurrency so it dosent overwrite another or share the same name.
         """
-        db = load_json("db/crypto_currencies.json")
+        db = load_json("src/db/crypto_currencies.json")
         for index in db["currencies"]:
             if name == index["name"]: return False
         return True
@@ -179,20 +186,20 @@ class CryptoCurrency:
                 consider deleting previous values older than 3 months(2016 entries ago)
         """
 
-        db = load_json("db/crypto_currencies.json") # loads up the db containing all currencies
+        db = load_json("src/db/crypto_currencies.json") # loads up the db containing all currencies
 
         currency = self.obj_to_dict() # transforms the object into a dict to be used
 
         for i in range(len(db["currencies"])): # cycles through all of them to find the matching one by name
             if db["currencies"][i]["name"] == currency["name"]:
                 db["currencies"][i] = currency
-                update_json("db/crypto_currencies.json", db)
+                update_json("src/db/crypto_currencies.json", db)
                 return
 
         # if the currency is not found, add it.
         db["currencies"].append(currency)
         db["count"] += 1 # updates the number of crypto currencies stored in the database
-        update_json("db/crypto_currencies.json", db)
+        update_json("src/db/crypto_currencies.json", db)
         return
 
     def cache(self):
@@ -236,14 +243,14 @@ class CryptoCurrency:
 
             Looks through the crypto currencies json and deletes the right entry as well as decrement the counter.
         """
-        db = load_json("db/crypto_currencies.json")  # loads up the db containing all currencies
+        db = load_json("src/db/crypto_currencies.json")  # loads up the db containing all currencies
 
         # deletes from the json so it cannot be loaded again
         for i in range(len(db["currencies"])):
             if db["currencies"][i]["name"] == self.name:
                 db["currencies"].pop(i)
                 db["count"] -=1
-                update_json("db/crypto_currencies.json", db)
+                update_json("src/db/crypto_currencies.json", db)
                 break
 
         # deletes it from the cache as well so it cannot be referenced
@@ -516,15 +523,14 @@ class CryptoCurrency:
 
     @staticmethod
     def exists(coin_name:str): # determines if a currency exists in the database
-        db = load_json("db/crypto_currencies.json")
-        for currency in db["currencies"]:
+        for currency in crypto_cache:
             if currency["name"] == coin_name: return True
         return False
 
     @staticmethod
     def load_coin_dict(coin_name:str): # loads a currency given its name.
-        db = load_json("db/crypto_currencies.json")
-        for currency in db["currencies"]:
+        # we load from the cache as the database is mostly used to save currencies, not keep track of them
+        for currency in crypto_cache:
             if currency["name"] == coin_name: return currency
 
     def calc_value(self, v:float,shares:int, buying:bool)->float:
@@ -584,7 +590,7 @@ def clear_db():
     """
     clears the cryptocurrency db
     """
-    db = load_json("db/crypto_currencies.json")
+    db = load_json("src/db/crypto_currencies.json")
     for currency in db["currencies"]:
         coin = CryptoCurrency(currency)
         coin.delete()
