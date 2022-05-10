@@ -34,10 +34,9 @@
 
 - ### finish crypto features
 - - can add shares to the total.
-- - - will be automatically done every month
+- - - will be automatically done every month (1.1)
  
 - ### Experiment with currencies and their stability when trading with charts.
-- - test with the current trade functions 
 - - test with all the max constants(need to resolve the json issue)
 
 - ### Add in the discord bot boilerplate.
