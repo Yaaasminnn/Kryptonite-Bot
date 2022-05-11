@@ -11,6 +11,7 @@ version: v1.0
 """
 import discord
 from discord.ext import commands
+from discord.ext.tasks import loop
 import asyncio
 import logging
 
@@ -20,6 +21,7 @@ from constants import *
 from src.utils.json_utils import *
 from src.utils.users import *
 from src.utils.crypto_currency import *
+from src.utils.discord_utils import *
 
 # sets up logging
 logger = logging.getLogger('discord')
@@ -32,22 +34,61 @@ imp_info = load_json("src/kryptonite_bot/imp_info.json") # loads the important i
 
 bot = commands.Bot(command_prefix=">") # initializes the bot
 
+
+# GENERAL BOT COMMANDS =================================================================#
+
+
 @bot.event
 async def on_ready(): # runs this on startup
     print("online")
+
     # dm me that it started
-    reload_constants() # loads all the constants into memory
-    load_db_into_cache() # loads all currencies
+    await dm_user(bot, id=imp_info['owner id'], msg="Online")
+
+    await reload_constants() # loads all the constants into memory
+
+    await load_db_into_cache() # loads all currencies
+
+    pretty_print(crypto_cache)
+
+@bot.event
+async def on_command_error(ctx, error):
+    # the cooldown error
+    # if the user tries to run a command while on cooldown, this message is sent
+    if isinstance(error, commands.CommandOnCooldown):
+        msg = f"Your running commands too quickly, you can try that again in {int(error.retry_after)} seconds"
+        await ctx.send(msg)
 
 @bot.command()
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandOnCooldown):
-        msg = f"Your running commands too quickly, you can try that again in {error.retry_after}"
-        await ctx.send(msg)
+async def change_constants(ctx, constant_name:str, value):# allows me to change the constants
+    if ctx.author.id != imp_info['owner id']: return
+
+    await change_constants(constant_name, value)
+
+@bot.command()
+async def clear(ctx): # allows me to clear the crypto db
+    if ctx.author.id != imp_info['owner id']: return
+
+    clear_db() # clears the db
+
+    await dm_user(bot,imp_info["owner id"], "Cleared the Crypto Database")
+
+
+# HELP COMMAND STUFF =================================================================#
+
+
+# help
+
+
+# GENERAL ECONOMY COMMANDS =================================================================#
+
 
 @bot.command(aliases=["d"])
 @commands.cooldown(1, 86400, commands.BucketType.user) # only used once per day.
 async def daily(ctx): # daily command to give the user money into their wallet
+
+    if ctx.author.bot: return  # does not answer to bots
+
     user = User(ctx.author.id)
     amount = randint(5000, 35_000)/100 # we use ints and divide by 100 so we can get better precision. range: 50-350
     user.wallet += amount
@@ -56,11 +97,17 @@ async def daily(ctx): # daily command to give the user money into their wallet
 
 @bot.command(aliases=["start"])
 async def init(ctx): # creates an account
+
+    if ctx.author.bot: return  # does not answer to bots
+
     user = User(ctx.author.id)
     await ctx.send("made your account")
 
 @bot.command(aliases=["b", "balance"])
 async def bal(ctx): # gives the current balance
+
+    if ctx.author.bot: return # does not answer to bots
+
     user = User(ctx.author.id)
     await ctx.send(
         f"Wallet: {user.wallet}\n"
@@ -86,6 +133,8 @@ async def holdings(ctx, account_name=None):
             msg += f"   {holding}: {user.accounts[account_name]['holdings'][holding]}\n"
         return msg
 
+    if ctx.author.bot: return  # does not answer to bots
+
     user = User(ctx.author.id) # loads the user
     msg = ""
 
@@ -109,6 +158,9 @@ async def transfer(ctx, amount:float, uid:int):
     only accepts non-zero positive values. then it calls the user.transfer() method
     afterward saves.
     """
+
+    if ctx.author.bot: return  # does not answer to bots
+
     if amount<=0.0:
         await ctx.send("amount must be a positive number")
         return
@@ -127,6 +179,9 @@ async def withdraw(ctx, account_name:str, amount:float):
     choose from. the bank account can be either tfa or ntfa.
     afterward, it just calls the user.withdraw() method
     """
+
+    if ctx.author.bot: return  # does not answer to bots
+
     if amount <=0.0:
         await ctx.send("amount must be a positive number")
         return
@@ -145,6 +200,9 @@ async def deposit(ctx, account_name: str, amount: float):
     choose from. the bank account can be either tfa or ntfa.
     afterward, it just calls the user.deposit() method
     """
+
+    if ctx.author.bot: return  # does not answer to bots
+
     if amount <= 0.0:
         await ctx.send("amount must be a positive number")
         return
@@ -154,11 +212,18 @@ async def deposit(ctx, account_name: str, amount: float):
 
     user.save() # saves
 
+
+# CRYPTO COMMANDS =================================================================#
+
+
 @bot.command(aliases=["v"])
 async def view(ctx, coin_name:str): # view info on a specific currency
     """
     Displays information on a specific currency
     """
+
+    if ctx.author.bot: return  # does not answer to bots
+
     msg =""
     # looks through the cache for the currency with the same name. if it matches, return it
     for currency_dict in crypto_cache:
@@ -173,12 +238,13 @@ async def list(ctx): # view a list of all currencies and their values
     """
     Loads all the currencies from the cache and displays their details.
     """
+
+    if ctx.author.bot: return  # does not answer to bots
+
     msg = ""
-    for i in range(len(crypto_cache)): # we directly use the cached dict, because loading the Cryptocurrency obj dont work
-        msg += f"{crypto_cache[i]['name']}:" \
-               f"    Value: ${crypto_cache[i]['value']}, " \
-               f"Total coins: ${crypto_cache[i]['total_shares']}, " \
-               f"Market cap: ${crypto_cache[i]['value'] * crypto_cache[i]['total_shares']}\n"
+    for currency_dict in crypto_cache: # goes through all currencies
+        coin = CryptoCurrency(currency_dict)
+        msg += f"{coin.name}:    Value: ${coin.value}, Total coins: ${coin.total_shares}, Market cap: ${coin.market_cap}\n"
     await ctx.send(msg)
 
 @bot.command(aliases=["purchase", "p"])
@@ -199,6 +265,8 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
     in case the value crashes or reaches the maximum value before it finishes calculations. this way, the value does not
     go out of hand and the user is not charged unjustly.
     """
+
+    if ctx.author.bot: return  # does not answer to bots
 
     if shares <1: # ensures the number of shares bought is at least 1
         await ctx.send("You must purchase at least 1 share.")
@@ -292,6 +360,9 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
     in case the value crashes or reaches the maximum value before it finishes calculations. this way, the value does not
     go out of hand and the user is not charged unjustly.
     """
+
+    if ctx.author.bot: return  # does not answer to bots
+
     if shares <1: # ensures the number of shares bought is at least 1
         await ctx.send("You must purchase at least 1 share.")
         return
@@ -367,9 +438,18 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
     await ctx.send(f"Successfully sold {shares_traded} coin/s of {coin_name} for ${subtotal}")
 
 
+# SUBPROCESSES =================================================================#
+
+
 # Run command and all the subprocesses
 # subprocesses:
 #   simulate all currencies
+#   add new currencies if need be
 #   reload constants
 #   change status?
-bot.run(imp_info["token"])
+simulate_cache.start()
+add_currencies.start()
+reload_constants.start()
+# changes status
+
+bot.run(imp_info["token"]) # runs the bot

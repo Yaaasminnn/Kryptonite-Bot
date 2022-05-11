@@ -5,14 +5,46 @@ import datetime
 from src.utils.json_utils import *
 from src.utils.math_funcs import *
 from src.constants import *
+from discord.ext.tasks import loop
 crypto_cache = [] # the list of crypto currencies. we use this if we wants to retrieve information on a currency
 
-def load_db_into_cache(): # loads all currencies into the crypto cache
+
+async def load_db_into_cache(): # loads all currencies into the crypto cache
     db = load_json("src/db/crypto_currencies.json")
     for currency_dict in db["currencies"]:
-        #pretty_print(currency_dict)
         crypto_cache.append(currency_dict)
-    #pretty_print(crypto_cache)
+
+@loop(minutes=1)
+async def simulate_cache(): # simulates all currencies in the cache
+    for currency_dict in crypto_cache:
+        coin = CryptoCurrency(currency_dict)
+        coin.simulate()
+
+@loop(minutes=1)
+async def add_currencies(): # determines if we should add a currency or not
+    """
+    Adds a cryptocurrency.
+
+    There aren't too many people who will play this game. and if there are too many currencies compared to the people
+    who play, less atention will be given to certain currencies. This allows some people to take control of a coin
+    nobody is watching. Rather, the intended method is for users to compete for the same coins.
+
+    the amount of coins we want in the database at any given time is between 2-7.
+    If the number of coins existing is below that, we always add a new one. if it is above it, we never add a new one.
+    if it is anywhere between them, we add them at a rate of about 1/week.
+    """
+    db = load_json("src/db/crypto_currencies.json")
+    if db["count"] < min_coins: # always adds a coin
+        coin = CryptoCurrency()
+        print(f"Added new currency named {coin.name}!")
+    elif db["count"] > max_coins: # never adds a coin
+        return
+    else: # there is a small chance of adding a coin
+        if randint(1,10080) == 1: # once a week
+            coin = CryptoCurrency()
+            print(f"Added new currency named {coin.name}!")
+
+
 
 class CryptoCurrency:
     def __init__(self, currency:dict=None):
@@ -39,9 +71,6 @@ class CryptoCurrency:
 
         """
         if currency is None: # if there was no argument given, it creates a new currency
-
-            # creates the CryptoCurrency dict
-            #self.currency = {}
 
             self.creation_date = str(datetime.datetime.now().replace(minute=0,second=0, microsecond=0))
             self.name = CryptoCurrency.regen_name() # uses a generator to generate a random name
@@ -145,7 +174,6 @@ class CryptoCurrency:
         self.name = currency["name"]
         self.creation_date = currency["creation_date"]
         self.uid = currency["uid"]
-        #self.total_shares = currency["total_shares"]
         self.delete_value = currency["delete_value"]
         self.value = currency["value"]
         self.Vmax_mag = currency["Vmax_mag"]
@@ -231,9 +259,10 @@ class CryptoCurrency:
         cache_len = len(crypto_cache)
         for i in range(cache_len-1, -1, -1): # iterates through the list backwards.
             if crypto_cache[i]["name"] == currency["name"]:
-                del crypto_cache[i]
+                crypto_cache[i] = currency
+                return
 
-        crypto_cache.append(currency) # appends the dict to cache.
+        crypto_cache.append(currency)
 
     def delete(self):
         """

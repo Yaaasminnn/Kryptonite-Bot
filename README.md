@@ -37,17 +37,15 @@
 - - - will be automatically done every month (1.1)
  
 - ### Experiment with currencies and their stability when trading with charts.
-- - test with all the max constants(need to resolve the json issue)
+- - test with all the max constants(need to resolve the json issue) (1.1)
 
 - ### Add in the discord bot boilerplate.
-- - Asyncronize the backend
+- - Asyncronize the backend (1.1)
+- - - just the class methods 
 - - cache currencies and relaod constants every minute
-- - front end(lots of embeds)
-- - - prob not in 1.0 
-- - Crypto currency and "Other" functionality
-- - - dynamically adds currencies 
-- - - simulates them
-- - protection against bots
+- - front end(lots of embeds (prob not in 1.0)
+- Crypto currency and "Other" functionality
+- - - help command
 - - make everything from floats to ints/100
 
 - ### deploy to the rpi

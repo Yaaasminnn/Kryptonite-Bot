@@ -134,6 +134,7 @@ class User:
 
             for holding in not_in_db:
                 del_dict_key(self.accounts[account]["holdings"], key=holding)
+                self.accounts[account]["num_holdings"] -=1
 
             not_in_db = []
 

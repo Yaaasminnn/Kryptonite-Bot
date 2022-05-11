@@ -119,13 +119,25 @@ def exists_test():
 
 def load_db_into_cache_test():
     load_db_into_cache()
-    pretty_print(crypto_cache[0])
-    pretty_print(crypto_cache[1])
+
+def add_currencies_test(): # tests adding currencies to the db
+    add_currencies()
+    db = load_json("src/db/crypto_currencies.json")
+    print(db["count"])
+
+def simulate_cache_test():
+    simulate_cache()
 
 if __name__ == '__main__':
     #clear_db()
 
-    load_db_into_cache_test()
+    CryptoCurrency()
+
+    #load_db_into_cache_test()
+
+    #add_currencies_test()
+
+    #simulate_cache_test()
 
 
 

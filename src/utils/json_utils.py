@@ -65,3 +65,9 @@ def del_dict_keys(dict:dict, keys:list):
     for key in keys:
         del dict[key]
     return dict
+
+def key_exists(dict:dict, key:str)->bool:
+    """
+    Checks if a key exists
+    """
+    return key in dict
