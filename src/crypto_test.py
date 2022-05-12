@@ -133,7 +133,7 @@ if __name__ == '__main__':
 
     CryptoCurrency()
 
-    #load_db_into_cache_test()
+    #load_db_into_cache_test_sync()
 
     #add_currencies_test()
 

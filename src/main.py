@@ -32,7 +32,7 @@ logger.addHandler(handler)
 
 imp_info = load_json("src/kryptonite_bot/imp_info.json") # loads the important info
 
-bot = commands.Bot(command_prefix=">") # initializes the bot
+bot = commands.Bot(command_prefix=">", help_command=None) # initializes the bot. disables the default help command
 
 
 # GENERAL BOT COMMANDS =================================================================#
@@ -77,7 +77,63 @@ async def clear(ctx): # allows me to clear the crypto db
 # HELP COMMAND STUFF =================================================================#
 
 
-# help
+@bot.group(invoke_without_command=True)
+async def help(ctx): # make this a docs page
+    embed_help = discord.Embed(title="Help Menu", description="Use >help [command] for more info", color=c.purple())
+    #embed_help.add_field(name="General commands:", value="server", inline=False)
+    embed_help.add_field(name="Economy commands:", value="daily, init, balance, deposit, withdraw, transfer", inline=False)
+    embed_help.add_field(name="Crypto commands:", value="holdings, view, buy, sell, list", inline=False)
+    embed_help.add_field(name="Gambling commands:", value="**COMING SOON**", inline=False)
+
+    await ctx.send(embed=embed_help)
+
+@help.command()
+async def daily(ctx):
+    em = discord.Embed(title="Daily", description="daily command to get more money")
+    em.add_field(name="Usage", value="'>daily' or '>d'")
+    em.add_field(name="Description", value="Can earn $50-$350 dollars added to your bank account once every 24 hours.")
+
+    await ctx.send(embed=em)
+
+@help.command()
+async def init(ctx):
+    em = discord.Embed(title="Init", description="Initialize your account")
+    em.add_field(name="Usage", value="'>init'")
+    em.add_field(name="Description", value="Creates your bank accounts and gives you a starting value of $200. Use this command to get started.")
+
+    await ctx.send(embed=em)
+
+@help.command()
+async def bal(ctx):
+    em = discord.Embed(title="Balance", description="View your current balance.")
+    em.add_field(name="Usage", value="'>b', '>balance' or '>bal'")
+    em.add_field(name="Description", value="View how much money you have in your wallet and bank accounts.")
+    em.add_field(name="Examples", value="Wallet: 200.0\nTFA: 0.0\nNTFA: 25.0")
+
+    await ctx.send(embed=em)
+
+@help.command()
+async def holdings(ctx):
+    em = discord.Embed(title="Holdings", description="View your investments")
+    em.add_field(name="Usage", value="'>investments', '>holdings' or '>i'")
+    em.add_field(name="Description", value="View the number of coins you currently own across both accounts")
+    em.add_field(name="Example", value="TFA: ------------------------------\n   coin_1: 4\nNTFA: ------------------------------\n   coin_3: 2")
+
+    await ctx.send(embed=em)
+
+@help.command()
+
+@help.command()
+
+@help.command()
+
+@help.command()
+
+@help.command()
+
+@help.command()
+
+@help.command()
 
 
 # GENERAL ECONOMY COMMANDS =================================================================#
@@ -100,7 +156,8 @@ async def init(ctx): # creates an account
 
     if ctx.author.bot: return  # does not answer to bots
 
-    user = User(ctx.author.id)
+    User(ctx.author.id) # loads up the user
+
     await ctx.send("made your account")
 
 @bot.command(aliases=["b", "balance"])
@@ -110,9 +167,9 @@ async def bal(ctx): # gives the current balance
 
     user = User(ctx.author.id)
     await ctx.send(
-        f"Wallet: {user.wallet}\n"
-        f"TFA: {user.accounts['tfa']['balance']}\n"
-        f"NTFA: {user.accounts['ntfa']['balance']}"
+        f"Wallet: {user.wallet/100}\n"
+        f"TFA: {user.accounts['tfa']['balance']/100}\n"
+        f"NTFA: {user.accounts['ntfa']['balance']/100}"
     )
 
 @bot.command(aliases=["investments", "i"])
@@ -151,7 +208,7 @@ async def holdings(ctx, account_name=None):
     await ctx.send(msg) # returns the message
 
 @bot.command(aliases=["t"])
-async def transfer(ctx, amount:float, uid:int):
+async def transfer(ctx, amount:float, member:discord.Member):
     """
     Transfers money from 1 wallet to the next.
 
@@ -166,7 +223,7 @@ async def transfer(ctx, amount:float, uid:int):
         return
 
     user = User(ctx.author.id)
-    await ctx.send(user.transfer(amount=amount, uid=uid))
+    await ctx.send(user.transfer(amount=amount, uid=member.id))
 
     user.save() # saves the user
 

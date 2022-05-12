@@ -14,6 +14,11 @@ async def load_db_into_cache(): # loads all currencies into the crypto cache
     for currency_dict in db["currencies"]:
         crypto_cache.append(currency_dict)
 
+def load_db_into_cache_sync(): # loads all currencies into the crypto cache
+    db = load_json("src/db/crypto_currencies.json")
+    for currency_dict in db["currencies"]:
+        crypto_cache.append(currency_dict)
+
 @loop(minutes=1)
 async def simulate_cache(): # simulates all currencies in the cache
     for currency_dict in crypto_cache:
@@ -77,10 +82,10 @@ class CryptoCurrency:
             self.uid = 0
             self.delete_value = 0.0 # normally 0
 
-            self.value = uniform(0.5, 50.0) # normally 0.5 -> 50
+            self.value = randint(50, 5000)/100 # normally 0.5 -> 50
             self.Vmax_mag = max(
-                0.005,
-                uniform(0.004, 0.00013)*self.value
+                0.5,
+                uniform(0.005, 0.0005)*self.value
             )
             # if too volatile, 5M-15M
             self.total_shares = randint(90_000, 2_000_000) # normally 9k-100k. make it between that and 90k-2m. 100k shares = 30ish delta

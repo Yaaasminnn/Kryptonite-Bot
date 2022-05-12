@@ -37,17 +37,6 @@ class User:
 
             self.save() # saves the user
 
-        """try: # if the json file dosent already exist, create it
-            self.user = load_json(f"db/users/{uid}.json")
-        except:
-            create_json(f"db/users/{uid}.json")
-            self.user = load_json(f"db/users/{uid}.json")
-            self.user["uid"] = uid
-            self.user["wallet"] = start_amount
-            self.create_accounts() # creates both crypto accounts
-
-            # saves the user
-            self.save()"""
         # verifies that all holdings they own still exist.
         # incase a coin crashes, the holdings will have no value anymore and are deleted.
         self.verify_holdings()
@@ -147,41 +136,45 @@ class User:
         """
         self.last_accessed = str(datetime.datetime.now().replace(second=0, microsecond=0))
 
-    def trade(self): pass
-
     def bank_deposit(self, amount:float, account_name:str):
         """
         Deposits the user's wallet into the bank account.
 
         There are no limits on how often/how much one can transfer from their own accounts.
+
+        amount is in cents for simplicity. the user will be entering values in dollars, so we must multiply by 100
         todo:
             add support for depositing/withdrawing all
         """
+
+        amount *= 100 # transfers the value to cents
+
         if amount > self.wallet:
             return f"Insufficient wallet balance\nBalance: {self.wallet}\nNeeded: {amount}"
 
         self.wallet -=amount
         self.accounts[account_name]["balance"] += amount
 
-        return f"Deposited ${amount} into {account_name} account successfully"
+        return f"Deposited ${amount/100} into {account_name} account successfully"
 
     def bank_withdraw(self, amount:float, account_name:str):
         """
         Withdraws money from the bank account to the user's wallet.
 
         No limits on how often/how much can be withdrawn.
+
+        amount is in cents for simplicity. the user will be entering values in dollars, so we must multiply by 100
         """
+
+        amount *= 100 # transfers amount into cents
+
         if amount > self.accounts[account_name]["balance"]: # cannot exceed existing funds
             return f"Insufficient bank balance.\nBalance: {self.accounts[account_name]['balance']}\nNeeded: {amount}"
 
         self.accounts[account_name]["balance"] -= amount
         self.wallet += amount
 
-        return f"Withdrew ${amount} from {account_name} account successfully"
-
-    def wallet_modify(self): pass
-
-    def bank_modify(self): pass
+        return f"Withdrew ${amount/100} from {account_name} account successfully"
 
     def transfer(self, amount:float, uid:int):
         """
@@ -191,7 +184,12 @@ class User:
         recipient's wallet. Has to be within the maximum transfer amount
 
         The bot calling this function will determine needed.(positive integers only, who to ping etc)
+
+        amount is in cents for simplicity. the user will be entering values in dollars, so we must multiply by 100
         """
+
+        amount *= 100 # transfers to cents
+
         if amount > max_transfer_limit: # cant  exceed the transfer limit.
             return f"Transfer amount exceeds transfer limit.\nTransfer limit: {max_transfer_limit}"
 
@@ -247,7 +245,6 @@ class User:
         else:
             return shares <= self.accounts[account_name]["holdings"][coin_name]
 
-
     def balance_exceeds_limit(self, account_name:str, amount:float)->bool:
         """
         Ensures that the user's bank account does not exceed the maximum balance.
@@ -272,8 +269,6 @@ class User:
 
         return self.accounts[account_name]["balance"]
 
-
-
     def modify_account(self, account_name:str, amount:float):
         """
         modifies a bank account with the given amount of money.
@@ -282,7 +277,10 @@ class User:
 
         sales are positive
         purchases are negative
+
+        amount is in cents for simplicity. the user will be entering values in dollars, so we must multiply by 100
         """
+        amount *= 100 # transfers to cents
         self.accounts[account_name]["balance"] += amount
 
     @staticmethod

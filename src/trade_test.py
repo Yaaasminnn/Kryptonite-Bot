@@ -152,6 +152,7 @@ def buy_test(uid, account_name:str, coin_name:str, shares:int):
     # determine how many times this runs. this section's "shares" will be replaced
     # runs so long as the value dosent crash nor rise beyond the max_value
     # also while the shares > 0 as they are deducted every iteration
+    print("value", v)
     while (shares > 0 and (v > coin.delete_value and v < coin.max_value)):
 
         deducted_shares = min(shares_per_interval, shares)
@@ -240,7 +241,9 @@ def sell_test(uid, account_name:str, coin_name:str, shares:int):
 
     if not user.has_enough_shares(account_name=account_name, coin_name=coin_name, shares=shares_total):
         # uses shares_total
-        return f"not enough shares to sell\nto sell: {shares_total}\nhas: {user.accounts[account_name]['holdings'][coin_name]}"
+        # if the coin does not exist in their holdings, it means they have no shares
+        try: return f"not enough shares to sell\nto sell: {shares_total}\nhas: {user.accounts[account_name]['holdings'][coin_name]}"
+        except KeyError: return f"You dont own {coin_name}"
 
 
     if user.volume_exceeds_trade_limit(account_name=account_name,volume=subtotal): # if the volume of the purchase exceeds the limit
@@ -253,7 +256,6 @@ def sell_test(uid, account_name:str, coin_name:str, shares:int):
 
 
     user.cap_balance(account_name=account_name, amount=subtotal) # sets the new balance. if it passes the limit, it caps it
-    #user.modify_account(account_name=account_name, amount=subtotal)  # when buying, amount is +, selling, -
     coin.change_currency_value(v)  # changes the value of the currency
     user.decrease_holding(account_name=account_name, coin_name=coin_name, shares=shares_traded)  # modifies the holding
 
@@ -289,20 +291,20 @@ def buying_interval_test(shares:int):
     print("")
 
 if __name__ == '__main__':
-    #clear_db() # clears the cryptocurrency db
-    load_db_into_cache()
+    clear_db() # clears the cryptocurrency db
+    load_db_into_cache_sync()
 
-    #coin = CryptoCurrency()
+    coin = CryptoCurrency()
     #coin.value = 99
     #coin.total_shares = 100
     #coin.save()
 
-    shares = 5000
+    shares = 1
 
     #calc_value_test(coin, shares=shares, buying=True)
 
-    #print(buy_test(1, "ntfa", "Fake-Dubloons", shares))
+    print(buy_test(1, "tfa", crypto_cache[0]["name"], shares))
 
     #cap_balance_test(User(1), "ntfa", amount=100)
 
-    print(sell_test(1, "ntfa", "Fake-Dubloons", shares=shares))
+    #print(sell_test(1, "tfa", crypto_cache[0]["name"], shares=shares))

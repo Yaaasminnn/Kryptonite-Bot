@@ -47,6 +47,7 @@
 - Crypto currency and "Other" functionality
 - - - help command
 - - make everything from floats to ints/100
+- - show the value of our holdings, not just the shares (store that in json db)
 
 - ### deploy to the rpi
 - - backup script(for the database)
@@ -70,3 +71,6 @@
 - - the issue seems to be json losing precision for higher values, but that wont be fixed by the initial release
 - - idea: convert it to scientific notation?
 - Cooldown message not appearing
+- since you pay a tax, you must wait for the currency to rise before selling. however, because the price increase when you buy, it might be increasing at a faster rate than the purchase tax
+- - raise tax rates since otherwise, increases are fine
+- - compare the tax rate vs how much a currency value will increase
