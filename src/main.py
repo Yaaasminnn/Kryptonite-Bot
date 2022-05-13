@@ -73,67 +73,279 @@ async def clear(ctx): # allows me to clear the crypto db
 
     await dm_user(bot,imp_info["owner id"], "Cleared the Crypto Database")
 
+@bot.command(aliases=['add'])
+async def add_currency(ctx): # allows me to add currencies
+    if ctx.author.id != imp_info['owner id']: return
+
+    coin = CryptoCurrency()
+
+    await dm_user(bot, imp_info["owner id"], f"Added new currency, {coin.name}")
+
 
 # HELP COMMAND STUFF =================================================================#
 
 
 @bot.group(invoke_without_command=True)
 async def help(ctx): # make this a docs page
-    embed_help = discord.Embed(title="Help Menu", description="Use >help [command] for more info", color=c.purple())
+    em = discord.Embed(title="Help Menu", description="Use '>help [command]' for more info.", color=c.purple())
     #embed_help.add_field(name="General commands:", value="server", inline=False)
-    embed_help.add_field(name="Economy commands:", value="daily, init, balance, deposit, withdraw, transfer", inline=False)
-    embed_help.add_field(name="Crypto commands:", value="holdings, view, buy, sell, list", inline=False)
-    embed_help.add_field(name="Gambling commands:", value="**COMING SOON**", inline=False)
+    em.add_field(name="How to play", value="coins, accounts, taxes, wallet", inline=False)
+    em.add_field(name="Economy commands:", value="daily, init, balance, deposit, withdraw, transfer", inline=False)
+    em.add_field(name="Crypto commands:", value="holdings, view, buy, sell, list", inline=False)
+    em.add_field(name="Gambling commands:", value="**COMING SOON**", inline=False)
 
-    await ctx.send(embed=embed_help)
+    await ctx.send(embed=em)
 
 @help.command()
 async def daily(ctx):
-    em = discord.Embed(title="Daily", description="daily command to get more money")
-    em.add_field(name="Usage", value="'>daily' or '>d'")
-    em.add_field(name="Description", value="Can earn $50-$350 dollars added to your bank account once every 24 hours.")
+    em = discord.Embed(title="Daily", description="daily command to get more money.")
+    em.add_field(name="Usage", value="'>daily' or '>d'", inline=False)
+    em.add_field(name="Description", value="Can earn $50-$350 dollars added to your bank account once every 24 hours.\n\n"
+                                           "For more info on your wallet, use; '>help wallet'", inline=False)
 
     await ctx.send(embed=em)
 
 @help.command()
 async def init(ctx):
-    em = discord.Embed(title="Init", description="Initialize your account")
-    em.add_field(name="Usage", value="'>init'")
-    em.add_field(name="Description", value="Creates your bank accounts and gives you a starting value of $200. Use this command to get started.")
+    em = discord.Embed(title="Init", description="Initialize your account.")
+    em.add_field(name="Usage", value="'>init'", inline=False)
+    em.add_field(name="Description", value="Creates your bank accounts and gives your wallet a starting value of $200.\n"
+                                           " Use this command to get started.\n\n"
+                                           "For more info on your accounts, use; '>help accounts'\n"
+                                           "For more info on your wallet, use; '>help wallet'", inline=False)
 
     await ctx.send(embed=em)
 
 @help.command()
 async def bal(ctx):
     em = discord.Embed(title="Balance", description="View your current balance.")
-    em.add_field(name="Usage", value="'>b', '>balance' or '>bal'")
-    em.add_field(name="Description", value="View how much money you have in your wallet and bank accounts.")
-    em.add_field(name="Examples", value="Wallet: 200.0\nTFA: 0.0\nNTFA: 25.0")
+    em.add_field(name="Usage", value="'>b', '>balance' or '>bal'", inline=False)
+    em.add_field(name="Description", value="View how much money you have in your wallet and bank accounts.\n\n"
+                                           "For more info on your accounts, use; '>help accounts'", inline=False)
+    em.add_field(name="Examples", value="Wallet: 200.0\n"
+                                        "TFA: 0.0\n"
+                                        "NTFA: 25.0", inline=False)
 
     await ctx.send(embed=em)
 
 @help.command()
 async def holdings(ctx):
-    em = discord.Embed(title="Holdings", description="View your investments")
-    em.add_field(name="Usage", value="'>investments', '>holdings' or '>i'")
-    em.add_field(name="Description", value="View the number of coins you currently own across both accounts")
-    em.add_field(name="Example", value="TFA: ------------------------------\n   coin_1: 4\nNTFA: ------------------------------\n   coin_3: 2")
+    em = discord.Embed(title="Holdings", description="View your investments.")
+    em.add_field(name="Usage", value="'>holdings', '>investments' or '>i'", inline=False)
+    em.add_field(name="Description", value="View the number of coins you currently own across both accounts.\n\n"
+                                           "For more info on accounts, use; '>help accounts'\n"
+                                           "For more help on coins, use; '>help coins'", inline=False)
+    em.add_field(name="Example", value="TFA: ----------------------------\n"
+                                       "   coin_1: 4\n"
+                                       "NTFA: ---------------------------\n"
+                                       "   coin_3: 2", inline=False)
 
     await ctx.send(embed=em)
 
 @help.command()
+async def transfer(ctx):
+    em = discord.Embed(title="Transfer", description="Transfer money from your wallet to another's wallet.")
+    em.add_field(name="Usage", value="'>transfer [**amount**] [**@user**]' or '>t [**amount**] [**@user**]'", inline=False)
+    em.add_field(name="Example", value=">transfer 500 @user\n"
+                                       "*Transfers $500 from your wallet to @user's wallet*", inline=False)
+    em.add_field(name="Description", value=f"transfer money from your wallet to the specified user's wallet.\n "
+                                           f"Has to be less than ${max_transfer_limit/100} and greater then 0 since you cant steal money from people.\n\n"
+                                           f"For more info on your wallet, use; '>help wallet'",
+                 inline=False)
+
+    await ctx.send(embed=em)
 
 @help.command()
+async def withdraw(ctx):
+    em = discord.Embed(title="Withdraw", description="Withdraw money from the bank.")
+    em.add_field(name="Usage", value="'>withdraw [**ntfa or tfa**] [**amount**]' or '>bw  [**ntfa or tfa**] [**amount**]'", inline=False)
+    em.add_field(name="Example", value=">withdraw tfa 500\n"
+                                       "*Withdraws $500 from your tax-free account*", inline=False)
+    em.add_field(name="Description",
+                 value=f"You can withdraw money from a certain bank account. you have 2 bank accounts, tfa(Tax-Free account)"
+                       f" and ntfa(Non-Tax-Free account).\n "
+                       f"There are no limits on how much you can transfer between your wallet and accounts.\n"
+                       f"The only constraints is that amount must be a positive number.\n\n"
+                       f"Withdraw works the same way as the deposit command does.\n\n"
+                       f"For more info on your accounts, use; '>help accounts'\n"
+                       f"For more info on your wallet, use; '>help wallet'", inline=False)
+
+    await ctx.send(embed=em)
 
 @help.command()
+async def deposit(ctx):
+    em = discord.Embed(title="Deposit", description="Deposit money into the bank.")
+    em.add_field(name="Usage", value="'>deposit [**ntfa or tfa**] [**amount**]' or '>bd  [**ntfa or tfa**] [**amount**]'", inline=False)
+    em.add_field(name="Example", value=">deposit tfa 500\n"
+                                       "*Deposits $500 into your tax-free account*", inline=False)
+    em.add_field(name="Description",
+                 value=f"You can deposit money from a certain bank account. you have 2 bank accounts, tfa(Tax-Free account)"
+                       f" and ntfa(Non-Tax-Free account).\n"
+                       f"There are no limits on how much you can transfer between your wallet and accounts.\n"
+                       f"The only constraints is that amount must be a positive number.\n"
+                       f"Deposit works the same way as the withdraw command does"
+                       f"For more info on your accounts, use; '>help accounts'\n"
+                       f"For more info on your wallet, use; '>help wallet'", inline=False)
+
+    await ctx.send(embed=em)
 
 @help.command()
+async def view(ctx):
+    em = discord.Embed(title="View", description="View the details of a Cryptocurrency.")
+    em.add_field(name="Usage", value="'>view [**coin name**]' or '>v  [**coin name**]'", inline=False)
+    em.add_field(name="Example", value=">view kuki-bux\n"
+                                       "*Views the value, total coins and market cap of kuki-bux*", inline=False)
+    em.add_field(name="Description",
+                 value=f"View the value, total coins and market cap of a certain cryptocurrency.\n"
+                       f"The cryptocurrency must be given by name.\n\n"
+                       f"for more info on Crypto Currencies, use; '>help coins'", inline=False)
+
+    await ctx.send(embed=em)
 
 @help.command()
+async def list(ctx):
+    em = discord.Embed(title="List", description="View the details of all Cryptocurrencies.")
+    em.add_field(name="Usage", value="'>list' or '>l'", inline=False)
+    em.add_field(name="Description",
+                 value=f"View the value, total coins and market cap of all cryptocurrencies.\n\n"
+                       f"for more info on Crypto Currencies, use; '>help coins'\n", inline=False)
+
+    await ctx.send(embed=em)
 
 @help.command()
+async def buy(ctx):
+    em = discord.Embed(title="Buy", description="Buy a cryptocurrency.")
+    em.add_field(name="Usage", value="'>buy [**ntfa or tfa**] [**coin name**] [**num coins to buy**]',\n '>purchase [**ntfa or tfa**] [**coin name**] [**num coins to buy**]'\n or '>p [**ntfa or tfa**] [**coin name**] [**num coins to buy**]'", inline=False)
+    em.add_field(name="Example", value=">buy ntfa kuki-bux 1\n"
+                                       "*Buys 1 kuki-bux coin for your ntfa account. this will be taxed*")
+    em.add_field(name="Description",
+                 value=f"Buy into a Cryptocurrency. you must specify which account you will use (tfa or ntfa)."
+                       f"The chosen account will store the holding of said cryptocurrency's coins.\n This means that each account can hold different investments."
+                       f"Both accounts can hold coins of the same currency.\n "
+                       f"(ntfa can hold your kukibux coins while tfa can also hold kukibux coins at the same time)\n\n"
+                       f"You must buy at least 1 of a coin. no fractional buys.\n\n"
+                       f"Do note that there are limits set in place for how many coins you can buy/sell at a time({trading_limit_shares}) and maximum trade volumes(for more info, use; '>help accounts'). Trades are also limited to 1 every 15 seconds.\n\n"
+                       f"Additionally, there are taxes(12%) imposed on your purchase if you are using a ntfa bank account.\n\n"
+                       f"For more info on taxes, use; '>help taxes'", inline=False)
+
+    await ctx.send(embed=em)
 
 @help.command()
+async def sell(ctx):
+    em = discord.Embed(title="Sell", description="Sell a cryptocurrency.")
+    em.add_field(name="Usage",
+                 value="'>sell [**ntfa or tfa**] [**coin name**] [**num coins to buy**]'\nor '>s [**ntfa or tfa**] [**coin name**] [**num coins to buy**]'",
+                 inline=False)
+    em.add_field(name="Example", value=">sell ntfa kuki-bux 1\n"
+                                       "*Sells 1 kuki-bux coin from your ntfa account.*")
+    em.add_field(name="Description",
+                 value=f"Sell coins of a Cryptocurrency. you must specify which account you will use (tfa or ntfa)."
+                       f"The chosen account will sell shares of said cryptocurrency's coins.\n This means that each account can hold different investments. "
+                       f"Both accounts can hold coins of the same cryptocurrency.\n "
+                       f"(ntfa can hold your kukibux coins while tfa can also hold kukibux coins at the same time)\n\n"
+                       f"You must sell at least 1 of a coin. no fractional sales.\n\n"
+                       f"Do note that there are limits set in place for how many coins you can buy/sell at a time({trading_limit_shares}) and maximum trade volumes(for more info, use; '>help accounts'). Trades are also limited to 1 every 15 seconds.\n\n"
+                       f"There are no taxes on sales.\n\n"
+                       f"For more info on taxes, use; '>help taxes'", inline=False)
+
+    await ctx.send(embed=em)
+
+@help.command()
+async def coins(ctx):
+    em = discord.Embed(title="Coins", description="All about coins and cryptocurrencies")
+    em.add_field(name="What are cryptocurrencies?",
+                 value=f"Cryptocurrencies are coins that users can invest in using their money from their bank accounts.",
+                 inline=False)
+    em.add_field(name="How do cryptocurrencies work?",
+                 value=f"The bot stores between 2-7 cryptocurrencies at a time.\n"
+                       f" every minute, each cryptocurrency is simulated and it's value changes.\n"
+                       f" occasionally, they might spike or fall in value significantly.\n "
+                       f"For more info on viewing the value and details of a cryptocurrency, use; '>help view'\n\n"
+                       f"Sometimes a cryptocurrency might reach a value of $0, "
+                       f"if this is the case, it will crash, be deleted, and anyone who had invested in said coin, will "
+                       f"lose their investments.",
+                 inline=False)
+    em.add_field(name="Can I buy them? How?",
+                 value="Yes. You can purchase them using one of your bank accounts so long as your bank account has enough balance.\n"
+                       "To learn how to trade cryptocurrencies, use; '>help buy' or '>help sell'.\n"
+                       "For more info on bank accounts, use; '>help accounts'.")
+
+    await ctx.send(embed=em)
+
+@help.command()
+async def accounts(ctx):
+    em = discord.Embed(title="Accounts", description="All about your bank accounts.")
+    em.add_field(name="What are accounts?",
+                 value="Bank accounts are used to store money and investments. simple as that.\n",
+                 inline=False)
+    em.add_field(name="What kind of accounts are there?",
+                 value=f"There are 2 accounts:\n\n"
+                       f" **Tax-free accounts**, also known as **tfa**. these are not taxed on purchases. "
+                       f"This means that crypto purchases will be cheaper with a tax-free account, however, trades with said account are limited(max of ${tax_free_trading_limit_dollars/100})."
+                       f"These accounts are better suited for smaller purchases.\n\n"
+                       f"Next, there are **Non-Tax-free accounts** also known as **ntfa**. these accounts are taxed."
+                       f"Every cryptocurrency purchase will be taxed by 12%, however, you can make much larger trades with ntfa accounts(max of ${taxed_trading_limit_dollars/100})",
+                 inline=False)
+    em.add_field(name="How do my accounts store my investments?",
+                 value=f"Upon purchasing, the name of the currency and the number of coins you have purchased are logged into your account. you can view this using '>holdings'\n\n"
+                       f"The account you specify will hold that purchase. "
+                       f"This means each accounts investments are independent and seperate of eachother. Another note is that just because one account has investments in a certain coin, "
+                       f"does not mean another cannot also have investments of the same coin.",
+                 inline=False)
+    em.add_field(name="How can i transfer my money to my bank account?",
+                 value="For info on how to transfer money from your wallet to your bank accounts and back, use; '>help withdraw' or '>help deposit'",
+                 inline=False)
+    em.add_field(name="Properties of accounts",
+                 value="- name: [tfa/ntfa]\n"
+                       "- balance: [balance in your account]\n"
+                       "- holdings: [list of all your holdings]",
+                 inline=False)
+
+    await ctx.send(embed=em)
+
+@help.command()
+async def taxes(ctx):
+    em = discord.Embed(title="Taxes", description="All about your taxes.")
+    em.add_field(name="When are there taxes used??",
+                 value="Taxes are only placed when the user is buying a currency using a ntfa account. \n"
+                       "Otherwise, all interactions are tax-free\n"
+                       "For more info on accounts, use; '>help accounts'\n"
+                       "For more info on cryptocurrencies, use; '>help coins'",
+                 inline=False)
+    em.add_field(name="How much are taxes?",
+                 value="12% of the total cost of the purchase.",
+                 inline=False)
+
+    await ctx.send(embed=em)
+
+@help.command()
+async def wallet(ctx):
+    em = discord.Embed(title="Wallet", description="All about your Wallet.")
+    em.add_field(name="What is my Wallet for?",
+                 value="Your wallet is used for money on your person. "
+                       "Any money you make daily, gambling or transfers go into your wallet.\n"
+                       "For more info on daily, use; '>help daily'\n"
+                       "For more info on gambling, use; '>help gambling'\n"
+                       "For more infor on transfers, use; '>help transfer'",
+                 inline=False)
+    em.add_field(name="How do i Use it?",
+                 value=f"You can use your wallet to transfer money to others.\n"
+                       f"For more info on transfers, use; '>help transfer'",
+                 inline=False)
+    em.add_field(name="How do i move money to and from my Bank accounts?",
+                 value="To learn how to move money between accounts, use; '>help withdraw' or '>help deposit'\n",
+                 inline=False)
+
+    await ctx.send(embed=em)
+
+@help.command()
+async def gambling(ctx):
+    em = discord.Embed(title="Gambling", description="All about Gambling.")
+    em.add_field(name="Not implemented yet :/",
+                 value="Coming Soon!",
+                 inline=False)
+
+    await ctx.send(embed=em)
 
 
 # GENERAL ECONOMY COMMANDS =================================================================#
