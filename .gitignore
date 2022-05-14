@@ -3,5 +3,3 @@ src/db/crypto_currencies.json
 src/kryptonite_bot/imp_info.json
 src/LUNA bot/
 src/utils/__pycache__/*
-backups
-logs

@@ -44,8 +44,6 @@
 - - - just the class methods 
 - - cache currencies and relaod constants every minute
 - - front end(lots of embeds (prob not in 1.0)
-- Crypto currency and "Other" functionality
-- - - help command
 - - make everything from floats to ints/100
 - - show the value of our holdings, not just the shares (store that in json db)
 
@@ -63,8 +61,6 @@
 - ### Currency history can be seen via a visual graph (not in 1.0)
 
 - ### Gambling features (not in 1.0, but will be added ASAP)
-
-- ### Release v1.0
 
 # Issues:
 - at arbitrarily large values, python seems to round the numbers to '1e+X'

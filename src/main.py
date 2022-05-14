@@ -10,6 +10,8 @@ date created: February 17 2022
 version: v1.0
 """
 import discord
+import sys
+sys.path.insert(0, '../src')
 from discord.ext import commands
 from discord.ext.tasks import loop
 import asyncio
