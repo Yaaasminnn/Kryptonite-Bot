@@ -1,5 +1,6 @@
-src/db/users/*
+src/db/users/*.json
 src/db/crypto_currencies.json
 src/kryptonite_bot/imp_info.json
 src/LUNA bot/
 src/utils/__pycache__/*
+logs/discord.log
