@@ -718,6 +718,11 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
 
 # SUBPROCESSES =================================================================#
 
+@bot.event
+async def on_message(message): # if kuki annoys me, reply
+    if "krypto bot where" in message.content.lower():
+        await message.channel.send("here")
+
 
 # Run command and all the subprocesses
 # subprocesses:
