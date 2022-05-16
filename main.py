@@ -18,8 +18,8 @@ import logging
 from random import randint, uniform, choice
 from math import floor
 import sys
-#sys.path.insert(0, '../src'); print(sys.path[0])
-from constants import *
+sys.path.insert(0, '../src'); print(sys.path[0])
+from src.constants import *
 from src.utils.json_utils import *
 from src.utils.users import *
 from src.utils.crypto_currency import *
@@ -218,13 +218,13 @@ async def list(ctx):
 async def buy(ctx):
     em = discord.Embed(title="Buy", description="Buy a cryptocurrency.")
     em.add_field(name="Usage", value="'>buy [**ntfa or tfa**] [**coin name**] [**num coins to buy**]',\n '>purchase [**ntfa or tfa**] [**coin name**] [**num coins to buy**]'\n or '>p [**ntfa or tfa**] [**coin name**] [**num coins to buy**]'", inline=False)
-    em.add_field(name="Example", value=f">buy ntfa {crypto_cache[0]['name']} 1\n"
-                                       f"*Buys 1 {crypto_cache[0]['name']} coin for your ntfa account. this will be taxed*")
+    em.add_field(name="Example", value=">buy ntfa kuki-bux 1\n"
+                                       "*Buys 1 kuki-bux coin for your ntfa account. this will be taxed*")
     em.add_field(name="Description",
                  value=f"Buy into a Cryptocurrency. you must specify which account you will use (tfa or ntfa)."
                        f"The chosen account will store the holding of said cryptocurrency's coins.\n This means that each account can hold different investments."
                        f"Both accounts can hold coins of the same currency.\n "
-                       f"(ntfa can hold your {crypto_cache[0]['name']} coins while tfa can also hold {crypto_cache[0]['name']} coins at the same time)\n\n"
+                       f"(ntfa can hold your kukibux coins while tfa can also hold kukibux coins at the same time)\n\n"
                        f"You must buy at least 1 of a coin. no fractional buys.\n\n"
                        f"Do note that there are limits set in place for how many coins you can buy/sell at a time({trading_limit_shares}) and maximum trade volumes(for more info, use; '>help accounts'). Trades are also limited to 1 every 15 seconds.\n\n"
                        f"Additionally, there are taxes(12%) imposed on your purchase if you are using a ntfa bank account.\n\n"
@@ -238,13 +238,13 @@ async def sell(ctx):
     em.add_field(name="Usage",
                  value="'>sell [**ntfa or tfa**] [**coin name**] [**num coins to buy**]'\nor '>s [**ntfa or tfa**] [**coin name**] [**num coins to buy**]'",
                  inline=False)
-    em.add_field(name="Example", value=f">sell ntfa {crypto_cache[0]['name']} 1\n"
-                                       f"*Sells 1 {crypto_cache[0]['name']} coin from your ntfa account.*")
+    em.add_field(name="Example", value=">sell ntfa kuki-bux 1\n"
+                                       "*Sells 1 kuki-bux coin from your ntfa account.*")
     em.add_field(name="Description",
                  value=f"Sell coins of a Cryptocurrency. you must specify which account you will use (tfa or ntfa)."
                        f"The chosen account will sell shares of said cryptocurrency's coins.\n This means that each account can hold different investments. "
                        f"Both accounts can hold coins of the same cryptocurrency.\n "
-                       f"(ntfa can hold your {crypto_cache[0]['name']} coins while tfa can also hold {crypto_cache[0]['name']} coins at the same time)\n\n"
+                       f"(ntfa can hold your kukibux coins while tfa can also hold kukibux coins at the same time)\n\n"
                        f"You must sell at least 1 of a coin. no fractional sales.\n\n"
                        f"Do note that there are limits set in place for how many coins you can buy/sell at a time({trading_limit_shares}) and maximum trade volumes(for more info, use; '>help accounts'). Trades are also limited to 1 every 15 seconds.\n\n"
                        f"There are no taxes on sales.\n\n"
@@ -354,16 +354,16 @@ async def gambling(ctx):
 
 
 @bot.command(aliases=["d"])
-@commands.cooldown(1, 43200, commands.BucketType.user) # only used once per day.
+@commands.cooldown(1, 86400, commands.BucketType.user) # only used once per day.
 async def daily(ctx): # daily command to give the user money into their wallet
 
     if ctx.author.bot: return  # does not answer to bots
 
     user = User(ctx.author.id)
-    amount = randint(150, 600) # range 150-600 bucks
+    amount = randint(5000, 35_000)/100 # we use ints and divide by 100 so we can get better precision. range: 50-350
     user.wallet += amount
     user.save()
-    await ctx.send(f"You recived ${amount} the money has been deposited into your wallet")
+    await ctx.send(f"You recived ${amount}. the money has been deposited into your wallet")
 
 @bot.command(aliases=["start"])
 async def init(ctx): # creates an account
@@ -381,9 +381,9 @@ async def bal(ctx): # gives the current balance
 
     user = User(ctx.author.id)
     await ctx.send(
-        f"Wallet: {user.wallet}\n"
-        f"TFA: {user.accounts['tfa']['balance']}\n"
-        f"NTFA: {user.accounts['ntfa']['balance']}"
+        f"Wallet: {user.wallet/100}\n"
+        f"TFA: {user.accounts['tfa']['balance']/100}\n"
+        f"NTFA: {user.accounts['ntfa']['balance']/100}"
     )
 
 @bot.command(aliases=["investments", "i"])
@@ -409,16 +409,15 @@ async def holdings(ctx, account_name=None):
     user = User(ctx.author.id) # loads the user
     msg = ""
 
-    if account_name is None: # load all accounts if nothing is specified
-        msg = await holdings_list(user, "tfa", msg)
-        msg = await holdings_list(user, "ntfa", msg)
-
-    elif account_name.lower() == "tfa": # for the tax-free account
+    if account_name == "tfa": # for the tax-free account
         msg = await holdings_list(user, "tfa", msg)
 
-    elif account_name.lower() == "ntfa": # for the non-tax-free account
+    elif account_name == "ntfa": # for the non-tax-free account
         msg = await holdings_list(user, "ntfa", msg)
 
+    else: # otherwise load all accounts
+        msg = await holdings_list(user, "tfa", msg)
+        msg = await holdings_list(user, "ntfa", msg)
 
     await ctx.send(msg) # returns the message
 
@@ -433,12 +432,11 @@ async def transfer(ctx, amount:float, member:discord.Member):
 
     if ctx.author.bot: return  # does not answer to bots
 
-    user = User(ctx.author.id)
-
     if amount<=0.0:
         await ctx.send("amount must be a positive number")
         return
 
+    user = User(ctx.author.id)
     await ctx.send(user.transfer(amount=amount, uid=member.id))
 
     user.save() # saves the user
@@ -451,7 +449,6 @@ async def withdraw(ctx, account_name:str, amount:float):
     The user specifies a non-zero positive amount of money and which bank account to
     choose from. the bank account can be either tfa or ntfa.
     afterward, it just calls the user.withdraw() method
-
     """
 
     if ctx.author.bot: return  # does not answer to bots
@@ -461,7 +458,7 @@ async def withdraw(ctx, account_name:str, amount:float):
         return
 
     user = User(ctx.author.id)
-    await ctx.send(user.bank_withdraw(amount=amount, account_name=account_name.lower()))
+    await ctx.send(user.bank_withdraw(amount=amount, account_name=account_name))
 
     user.save()
 
@@ -473,7 +470,6 @@ async def deposit(ctx, account_name: str, amount: float):
     The user specifies a non-zero positive amount of money and which bank account to
     choose from. the bank account can be either tfa or ntfa.
     afterward, it just calls the user.deposit() method
-
     """
 
     if ctx.author.bot: return  # does not answer to bots
@@ -483,7 +479,7 @@ async def deposit(ctx, account_name: str, amount: float):
         return
 
     user = User(ctx.author.id)
-    await ctx.send(user.bank_deposit(amount=amount, account_name=account_name.lower()))
+    await ctx.send(user.bank_deposit(amount=amount, account_name=account_name))
 
     user.save() # saves
 
@@ -502,7 +498,7 @@ async def view(ctx, coin_name:str): # view info on a specific currency
     msg =""
     # looks through the cache for the currency with the same name. if it matches, return it
     for currency_dict in crypto_cache:
-        if currency_dict["name"] == coin_name.lower():
+        if currency_dict["name"] == coin_name:
             coin = CryptoCurrency(currency_dict)
             msg += f"{coin.name}:    Value: ${coin.value}, Total coins: ${coin.total_shares}, Market cap: ${coin.market_cap}"
             break
@@ -523,7 +519,6 @@ async def list(ctx): # view a list of all currencies and their values
     await ctx.send(msg)
 
 @bot.command(aliases=["purchase", "p"])
-@commands.cooldown(1, 15, commands.BucketType.user) # only used once per 15 seconds
 async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currency
     """
     Buys shares of a cryptocurrency.
@@ -586,8 +581,7 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
     if not user.has_enough_balance(account_name=account_name, cost=total): # if the user cannot afford to pay
         await ctx.send(f"Does not have enough money\n"
                  f"Has: {user.accounts[account_name]['balance']}\n"
-                 f"needs: {total}\n"
-                 f"Shares you can afford: {int(user.accounts[account_name]['balance'] / coin.value)}")
+                 f"needs: {total}")
         return
 
     if user.volume_exceeds_trade_limit(account_name=account_name, volume=subtotal): # if the volume of the purchase exceeds the limit
@@ -620,7 +614,6 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
     await ctx.send(f"Successfully purchased {shares_traded} coin/s of {coin_name} for ${total}")
 
 @bot.command(aliases=["s"])
-@commands.cooldown(1, 15, commands.BucketType.user) # only used once per 15 seconds
 async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a currency
     """
     Sells shares of a cryptocurrency.

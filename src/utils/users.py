@@ -147,15 +147,13 @@ class User:
             add support for depositing/withdrawing all
         """
 
-        amount *= 100 # transfers the value to cents
-
         if amount > self.wallet:
             return f"Insufficient wallet balance\nBalance: {self.wallet}\nNeeded: {amount}"
 
         self.wallet -=amount
         self.accounts[account_name]["balance"] += amount
 
-        return f"Deposited ${amount/100} into {account_name} account successfully"
+        return f"Deposited ${amount} into {account_name} account successfully"
 
     def bank_withdraw(self, amount:float, account_name:str):
         """
@@ -166,15 +164,13 @@ class User:
         amount is in cents for simplicity. the user will be entering values in dollars, so we must multiply by 100
         """
 
-        amount *= 100 # transfers amount into cents
-
         if amount > self.accounts[account_name]["balance"]: # cannot exceed existing funds
             return f"Insufficient bank balance.\nBalance: {self.accounts[account_name]['balance']}\nNeeded: {amount}"
 
         self.accounts[account_name]["balance"] -= amount
         self.wallet += amount
 
-        return f"Withdrew ${amount/100} from {account_name} account successfully"
+        return f"Withdrew ${amount} from {account_name} account successfully"
 
     def transfer(self, amount:float, uid:int):
         """
@@ -187,8 +183,6 @@ class User:
 
         amount is in cents for simplicity. the user will be entering values in dollars, so we must multiply by 100
         """
-
-        amount *= 100 # transfers to cents
 
         if amount > max_transfer_limit: # cant  exceed the transfer limit.
             return f"Transfer amount exceeds transfer limit.\nTransfer limit: {max_transfer_limit}"
@@ -280,7 +274,6 @@ class User:
 
         amount is in cents for simplicity. the user will be entering values in dollars, so we must multiply by 100
         """
-        amount *= 100 # transfers to cents
         self.accounts[account_name]["balance"] += amount
 
     @staticmethod

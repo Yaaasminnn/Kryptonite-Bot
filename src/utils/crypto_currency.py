@@ -45,7 +45,7 @@ async def add_currencies(): # determines if we should add a currency or not
     elif db["count"] > max_coins: # never adds a coin
         return
     else: # there is a small chance of adding a coin
-        if randint(1,10080) == 1: # once a week
+        if randint(1,5040) == 1: # once a week
             coin = CryptoCurrency()
             print(f"Added new currency named {coin.name}!")
 
