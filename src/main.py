@@ -51,15 +51,16 @@ async def on_ready(): # runs this on startup
 
     await load_db_into_cache() # loads all currencies
 
-    pretty_print(crypto_cache)
+    #pretty_print(crypto_cache)
 
 @bot.event
 async def on_command_error(ctx, error):
     # the cooldown error
     # if the user tries to run a command while on cooldown, this message is sent
     if isinstance(error, commands.CommandOnCooldown):
-        msg = f"Your running commands too quickly, you can try that again in {int(error.retry_after)} seconds"
-        await ctx.send(msg)
+        em = discord.Embed(title="Your sending commands too quickly!",
+                           description=f"You can try that again in {int(error.retry_after)} seconds")
+        await ctx.send(embed=em)
 
 @bot.command()
 async def change_constants(ctx, constant_name:str, value):# allows me to change the constants
@@ -68,7 +69,7 @@ async def change_constants(ctx, constant_name:str, value):# allows me to change 
     await change_constants(constant_name, value)
 
 @bot.command()
-async def clear(ctx): # allows me to clear the crypto db
+async def clear_coins(ctx): # allows me to clear the crypto db
     if ctx.author.id != imp_info['owner id']: return
 
     clear_db() # clears the db
@@ -363,7 +364,12 @@ async def daily(ctx): # daily command to give the user money into their wallet
     amount = randint(150, 600) # range 150-600 bucks
     user.wallet += amount
     user.save()
-    await ctx.send(f"You recived ${amount} the money has been deposited into your wallet")
+
+    # creates the embed.
+    em = discord.Embed(title="Daily Money",
+                       description=f"You recived **${amount}** the money has been deposited into your wallet")
+
+    await ctx.send(embed=em)
 
 @bot.command(aliases=["start"])
 async def init(ctx): # creates an account
@@ -372,7 +378,9 @@ async def init(ctx): # creates an account
 
     User(ctx.author.id) # loads up the user
 
-    await ctx.send("made your account")
+    em = discord.Embed(title="Created your account.")
+
+    await ctx.send(embed=em)
 
 @bot.command(aliases=["b", "balance"])
 async def bal(ctx): # gives the current balance
@@ -380,11 +388,13 @@ async def bal(ctx): # gives the current balance
     if ctx.author.bot: return # does not answer to bots
 
     user = User(ctx.author.id)
-    await ctx.send(
-        f"Wallet: {user.wallet}\n"
-        f"TFA: {user.accounts['tfa']['balance']}\n"
-        f"NTFA: {user.accounts['ntfa']['balance']}"
-    )
+
+    em = discord.Embed(title="User Balance")
+    em.add_field(name="Wallet", value=f"${user.wallet}", inline=False)
+    em.add_field(name="TFA", value=f"${user.accounts['tfa']['balance']}", inline=False)
+    em.add_field(name="NTFA", value=f"${user.accounts['ntfa']['balance']}", inline=False)
+
+    await ctx.send(embed=em)
 
 @bot.command(aliases=["investments", "i"])
 async def holdings(ctx, account_name=None):
@@ -718,10 +728,10 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
 
 # SUBPROCESSES =================================================================#
 
-@bot.event
+"""@bot.event
 async def on_message(message): # if kuki annoys me, reply
     if "krypto bot where" in message.content.lower():
-        await message.channel.send("here")
+        await message.channel.send("here")"""
 
 
 # Run command and all the subprocesses
@@ -735,4 +745,4 @@ add_currencies.start()
 reload_constants.start()
 # changes status
 
-bot.run(imp_info["token"]) # runs the bot
+bot.run(imp_info["test token"]) # runs the bot
