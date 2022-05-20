@@ -1,8 +1,4 @@
 """
-███████████████████████████████████████████████████████████████████████████████
-█▄─█─▄█▄─▄▄▀█▄─█─▄█▄─▄▄─█─▄─▄─█─▄▄─█▄─▀█▄─▄█▄─▄█─▄─▄─█▄─▄▄─███▄─▄─▀█─▄▄─█─▄─▄─█
-██─▄▀███─▄─▄██▄─▄███─▄▄▄███─███─██─██─█▄▀─███─████─████─▄█▀████─▄─▀█─██─███─███
-█▄▄█▄▄█▄▄█▄▄██▄▄▄██▄▄▄████▄▄▄██▄▄▄▄█▄▄▄██▄▄█▄▄▄██▄▄▄██▄▄▄▄▄███▄▄▄▄██▄▄▄▄██▄▄▄██
 A dynamic economy bot
 
 developer: lvlonEmperor
@@ -76,6 +72,8 @@ async def clear_coins(ctx): # allows me to clear the crypto db
 
     await dm_user(bot,imp_info["owner id"], "Cleared the Crypto Database")
 
+    print("Cleared the Crypto Database")
+
 @bot.command(aliases=['add'])
 async def add_currency(ctx): # allows me to add currencies
     if ctx.author.id != imp_info['owner id']: return
@@ -83,6 +81,7 @@ async def add_currency(ctx): # allows me to add currencies
     coin = CryptoCurrency()
 
     await dm_user(bot, imp_info["owner id"], f"Added new currency, {coin.name}")
+    print(f"Added new currency, {coin.name}")
 
 
 # HELP COMMAND STUFF =================================================================#
@@ -406,31 +405,40 @@ async def holdings(ctx, account_name=None):
     depending on which account whose holdings we want, we can load holdings_list() which loads all
     holdings in an account and equates it to msg. we can then return msg
     """
-    async def holdings_list(user:User, account_name:str ,msg:str):
+    async def holdings_list(user:User, account_name:str):
         # loads all holdings in a user's account
-        msg += f"{account_name.upper()}: ------------------------------\n"
-
+        value = ""
         for holding in user.accounts[account_name]["holdings"]:
-            msg += f"   {holding}: {user.accounts[account_name]['holdings'][holding]}\n"
-        return msg
+            value += f"{holding}: {user.accounts[account_name]['holdings'][holding]}\n"
+
+        # embeds cannot contain empty strings, so if there are no holdings, say that there are no holdings
+        if value == "":
+            return "No holdings"
+        else: return value
 
     if ctx.author.bot: return  # does not answer to bots
 
     user = User(ctx.author.id) # loads the user
-    msg = ""
+    em = discord.Embed(title="User Holdings") # the embed used.
 
     if account_name is None: # load all accounts if nothing is specified
-        msg = await holdings_list(user, "tfa", msg)
-        msg = await holdings_list(user, "ntfa", msg)
+        em.add_field(name="TFA",
+                     value=await holdings_list(user, "tfa"),
+                     inline=False)
+        em.add_field(name="NTFA",
+                     value=await holdings_list(user, "ntfa"),
+                     inline=False)
 
     elif account_name.lower() == "tfa": # for the tax-free account
-        msg = await holdings_list(user, "tfa", msg)
+        em.add_field(name="TFA",
+                     value=await holdings_list(user, account_name))
 
     elif account_name.lower() == "ntfa": # for the non-tax-free account
-        msg = await holdings_list(user, "ntfa", msg)
+        em.add_field(name="NTFA",
+                     value=await holdings_list(user, account_name))
 
 
-    await ctx.send(msg) # returns the message
+    await ctx.send(embed=em) # returns the message
 
 @bot.command(aliases=["t"])
 async def transfer(ctx, amount:float, member:discord.Member):
@@ -445,11 +453,18 @@ async def transfer(ctx, amount:float, member:discord.Member):
 
     user = User(ctx.author.id)
 
-    if amount<=0.0:
-        await ctx.send("amount must be a positive number")
+    em = discord.Embed(title="Transfer Money")
+
+    if amount<=0.0: # amount has to be greater than 0
+        em.add_field(name="Transfer", value="Amount must be a positive number")
+        await ctx.send(embed=em)
         return
 
-    await ctx.send(user.transfer(amount=amount, uid=member.id))
+    msg = user.transfer(amount=amount, uid=member.id)
+
+    em.add_field(name="Transfer", value=msg)
+
+    await ctx.send(embed=em)
 
     user.save() # saves the user
 
@@ -466,12 +481,17 @@ async def withdraw(ctx, account_name:str, amount:float):
 
     if ctx.author.bot: return  # does not answer to bots
 
+    em = discord.Embed(title="Bank Withdraw")
+
     if amount <=0.0:
-        await ctx.send("amount must be a positive number")
+        em.add_field(name="Error", value="Amount must be a positive number")
+        await ctx.send(embed=em)
         return
 
     user = User(ctx.author.id)
-    await ctx.send(user.bank_withdraw(amount=amount, account_name=account_name.lower()))
+    msg= user.bank_withdraw(amount=amount, account_name=account_name.lower())
+    em.add_field(name="Withdraw", value=msg)
+    await ctx.send(embed=em)
 
     user.save()
 
@@ -488,12 +508,17 @@ async def deposit(ctx, account_name: str, amount: float):
 
     if ctx.author.bot: return  # does not answer to bots
 
+    em = discord.Embed(title="Bank Deposit")
+
     if amount <= 0.0:
-        await ctx.send("amount must be a positive number")
+        em.add_field(name="Error", value="Amount must be a positive number")
+        await ctx.send(embed=em)
         return
 
     user = User(ctx.author.id)
-    await ctx.send(user.bank_deposit(amount=amount, account_name=account_name.lower()))
+    msg= user.bank_deposit(amount=amount, account_name=account_name.lower())
+    em.add_field(name="Deposit", value=msg)
+    await ctx.send(embed=em)
 
     user.save() # saves
 
@@ -509,14 +534,20 @@ async def view(ctx, coin_name:str): # view info on a specific currency
 
     if ctx.author.bot: return  # does not answer to bots
 
-    msg =""
+    em = discord.Embed(title=f"{coin_name} analytics")
+
     # looks through the cache for the currency with the same name. if it matches, return it
     for currency_dict in crypto_cache:
         if currency_dict["name"] == coin_name.lower():
             coin = CryptoCurrency(currency_dict)
-            msg += f"{coin.name}:    Value: ${coin.value}, Total coins: ${coin.total_shares}, Market cap: ${coin.market_cap}"
+            em.add_field(name="Value", value=f"${coin.value}", inline=False)
+            em.add_field(name="Total coins", value=f"{coin.total_shares} coins", inline=False)
+            em.add_field(name="Market cap", value=f"${coin.market_cap}", inline=False)
+#            msg += f"{coin.name}:    Value: ${coin.value}, Total coins: ${coin.total_shares}, Market cap: ${coin.market_cap}"
             break
-    await ctx.send(msg)
+
+
+    await ctx.send(embed=em)
 
 @bot.command(aliases=["l"])
 async def list(ctx): # view a list of all currencies and their values
@@ -527,10 +558,13 @@ async def list(ctx): # view a list of all currencies and their values
     if ctx.author.bot: return  # does not answer to bots
 
     msg = ""
+    em = discord.Embed(title="List cryptocurrencies")
     for currency_dict in crypto_cache: # goes through all currencies
         coin = CryptoCurrency(currency_dict)
-        msg += f"{coin.name}:    Value: ${coin.value}, Total coins: ${coin.total_shares}, Market cap: ${coin.market_cap}\n"
-    await ctx.send(msg)
+        msg += f"{coin.name}  -  ${coin.value}\n"
+
+    em.add_field(name="Currencies", value=msg)
+    await ctx.send(embed=em)
 
 @bot.command(aliases=["purchase", "p"])
 @commands.cooldown(1, 15, commands.BucketType.user) # only used once per 15 seconds
@@ -554,8 +588,11 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
 
     if ctx.author.bot: return  # does not answer to bots
 
+    em = discord.Embed(title="Purchase") # sale
+
     if shares <1: # ensures the number of shares bought is at least 1
-        await ctx.send("You must purchase at least 1 share.")
+        em.add_field(name="Error", value="You must purchase at least 1 share.")
+        await ctx.send(embed=em)
         return
 
     shares = floor(shares) # makes sure all shares bought are int. not float.
@@ -563,7 +600,8 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
     user = User(ctx.author.id) # loads the user
 
     if not CryptoCurrency.exists(coin_name): # checks if the coin exists. if so, load up the coin
-        await ctx.send(f"Crypto curency: {coin_name} does not exist")
+        em.add_field(name="Error", value=f"Crypto curency: {coin_name} does not exist")
+        await ctx.send(embed=em)
         return
     else:
         coin = CryptoCurrency(CryptoCurrency.load_coin_dict(coin_name))
@@ -594,24 +632,37 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
 
     # a number of checks to ensure the purchase is valid
     if not user.has_enough_balance(account_name=account_name, cost=total): # if the user cannot afford to pay
-        await ctx.send(f"Does not have enough money\n"
+        em.add_field(name="Error", value="Does not have enough money.", inline=False)
+        em.add_field(name="Has:", value=f"${user.accounts[account_name]['balance']}", inline=False)
+        em.add_field(name="Needs:", value=f"${total}", inline=False)
+        em.add_field(name="Shares you can afford:", value=f"{int(user.accounts[account_name]['balance'] / coin.value)}", inline=False)
+        await ctx.send(embed=em)
+        """await ctx.send(f"Does not have enough money\n"
                  f"Has: {user.accounts[account_name]['balance']}\n"
                  f"needs: {total}\n"
-                 f"Shares you can afford: {int(user.accounts[account_name]['balance'] / coin.value)}")
+                 f"Shares you can afford: {int(user.accounts[account_name]['balance'] / coin.value)}")"""
         return
 
     if user.volume_exceeds_trade_limit(account_name=account_name, volume=subtotal): # if the volume of the purchase exceeds the limit
         # uses subtotal instead of total
-        await ctx.send(f"subtotal exceeds trading limit\n"
+        em.add_field(name="Error", value="Subtotal exceeds trading limit.", inline=False)
+        em.add_field(name="Subtotal:", value=f"${subtotal}", inline=False)
+        em.add_field(name="Limit:", value=f"${taxed_trading_limit_dollars if account_name=='ntfa' else tax_free_trading_limit_dollars}", inline=False)
+        """await ctx.send(f"subtotal exceeds trading limit\n"
                  f"subtotal: {subtotal}\n"
-                 f"limit: {taxed_trading_limit_dollars if account_name=='ntfa' else tax_free_trading_limit_dollars}")
+                 f"limit: {taxed_trading_limit_dollars if account_name=='ntfa' else tax_free_trading_limit_dollars}")"""
+        await ctx.send(embed=em)
         return
 
     if user.shares_exceeds_trade_limit(shares_total): # if the user has attempted to trade more shares than they are allowed to.
         # uses the shares_total
-        await ctx.send(f"Shares exceed trading limit. \n"
+        em.add_field(name="Error", value="Shares exceed trading limit.", inline=False)
+        em.add_field(name="To buy:", value=f"{shares_total}", inline=False)
+        em.add_field(name="Max:", value=f"{trading_limit_shares}", inline=False)
+        await ctx.send(embed=em)
+        """await ctx.send(f"Shares exceed trading limit. \n"
                  f"to buy: {shares_total}\n"
-                 f"max:{trading_limit_shares}")
+                 f"max:{trading_limit_shares}")"""
         return
 
     # if all those checks are passed, then make the purchase
@@ -627,7 +678,10 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
     coin.save()
     user.save()
 
-    await ctx.send(f"Successfully purchased {shares_traded} coin/s of {coin_name} for ${total}")
+    # the embed showing success
+    em.add_field(name="Success", value=f"Successfully purchased {shares_traded} coin/s of {coin_name} for ${total}")
+
+    await ctx.send(embed=em)
 
 @bot.command(aliases=["s"])
 @commands.cooldown(1, 15, commands.BucketType.user) # only used once per 15 seconds
@@ -651,8 +705,11 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
 
     if ctx.author.bot: return  # does not answer to bots
 
+    em = discord.Embed(title="Sale") # the embed
+
     if shares <1: # ensures the number of shares bought is at least 1
-        await ctx.send("You must purchase at least 1 share.")
+        em.add_field(name="Error", value="You must purchase at least 1 share.")
+        await ctx.send(embed=em)
         return
 
     shares = floor(shares) # makes sure all shares bought are int. not float.
@@ -660,7 +717,8 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
     user = User(ctx.author.id) # loads the user
 
     if not CryptoCurrency.exists(coin_name): # checks if the coin exists. if so, load up the coin
-        await ctx.send(f"Crypto curency: {coin_name} does not exist")
+        em.add_field(name="Error", value=f"Crypto curency: {coin_name} does not exist")
+        await ctx.send(embed=em)
         return
     else:
         coin = CryptoCurrency(CryptoCurrency.load_coin_dict(coin_name))
@@ -689,25 +747,37 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
     # a number of extra checks to make sure the trade is valid
     if not user.has_enough_shares(account_name=account_name, coin_name=coin_name, shares=shares_total):
         # uses shares_total
-        await ctx.send(f"not enough shares to sell\n"
+        em.add_field(name="Error", value="Not enough shares to sell.", inline=False)
+        em.add_field(name="To Sell:", value=f"{shares_total}",inline=False)
+        em.add_field(name="Has:", value=f"{user.accounts[account_name]['holdings'][coin_name]}", inline=False)
+        await ctx.send(embed=em)
+        """await ctx.send(f"not enough shares to sell\n"
                  f"to sell: {shares_total}\n"
-                 f"has: {user.accounts[account_name]['holdings'][coin_name]}")
+                 f"has: {user.accounts[account_name]['holdings'][coin_name]}")"""
         return
 
     # if the volume of the purchase exceeds the limit
     if user.volume_exceeds_trade_limit(account_name=account_name,volume=subtotal):
         # uses subtotal instead of total
-        await ctx.send(f"subtotal exceeds trading limit\n"
+        em.add_field(name="Error", value="Subtotal exceeds trading limit.", inline=False)
+        em.add_field(name="Subtotal:", value=f"${subtotal}", inline=False)
+        em.add_field(name="Limit:", value=f"${taxed_trading_limit_dollars if account_name=='ntfa' else tax_free_trading_limit_dollars}", inline=False)
+        await ctx.send(embed=em)
+        """await ctx.send(f"subtotal exceeds trading limit\n"
                  f"subtotal: {subtotal}\n"
-                 f"limit: {taxed_trading_limit_dollars if account_name=='ntfa' else tax_free_trading_limit_dollars}")
+                 f"limit: {taxed_trading_limit_dollars if account_name=='ntfa' else tax_free_trading_limit_dollars}")"""
         return
 
     # if the user has attempted to trade more shares than they are allowed to.
     if user.shares_exceeds_trade_limit(shares_total):
         # uses the shares_total
-        ctx.send(f"Shares exceed trading limit. \n"
+        em.add_field(name="Error", value="Shares exceed trading limit.", inline=False)
+        em.add_field(name="To buy:", value=f"{shares_total}", inline=False)
+        em.add_field(name="Max:", value=f"{trading_limit_shares}",inline=False)
+        await ctx.send(embed=em)
+        """ctx.send(f"Shares exceed trading limit. \n"
                  f"to buy: {shares_total}\n"
-                 f"max:{trading_limit_shares}")
+                 f"max:{trading_limit_shares}")"""
         return
 
     # sets the new balance. if it passes the limit, it caps it
@@ -723,7 +793,10 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
     coin.save()
     user.save()
 
-    await ctx.send(f"Successfully sold {shares_traded} coin/s of {coin_name} for ${subtotal}")
+    # the embed for successful trades
+    em.add_field(name="Success", value=f"Successfully sold {shares_traded} coin/s of {coin_name} for ${subtotal}")
+
+    await ctx.send(embed=em)
 
 
 # SUBPROCESSES =================================================================#

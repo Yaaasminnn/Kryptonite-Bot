@@ -185,17 +185,17 @@ class User:
         """
 
         if amount > max_transfer_limit: # cant  exceed the transfer limit.
-            return f"Transfer amount exceeds transfer limit.\nTransfer limit: {max_transfer_limit}"
+            return f"Transfer amount exceeds transfer limit.\nTransfer limit: ${max_transfer_limit}"
 
         if amount > self.wallet:
-            return f"Insufficient funds to transfer.\n Your wallet: {self.wallet}\nAmount to send: {amount}"
+            return f"Insufficient funds to transfer.\n Your wallet: ${self.wallet}\nAmount to send: ${amount}"
 
         recipient = User(uid) # loads the recipient
         self.wallet -=amount
         recipient.wallet += amount
 
         recipient.save()
-        return f"Transfer sent successfully"
+        return f"Transfer of ${amount} sent successfully"
 
     def shares_exceeds_trade_limit(self, shares:int)->bool:
         """

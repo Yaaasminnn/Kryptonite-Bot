@@ -24,7 +24,7 @@
 - - buy/sell
 - - view (name)
 - - list currencies
-- - history (1.1?)
+- - history (1.2?)
 - ### Other/lotto
 - - lotto commands (higher, lower, betting etc) (1.1)
 - - daily
