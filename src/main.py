@@ -5,6 +5,7 @@ developer: lvlonEmperor
 date created: February 17 2022
 version: v1.0
 """
+
 import discord
 from discord.ext import commands
 from discord.ext.tasks import loop
@@ -47,6 +48,8 @@ async def on_ready(): # runs this on startup
 
     await load_db_into_cache() # loads all currencies
 
+    await print_cache() # prints the cache
+
     #pretty_print(crypto_cache)
 
 @bot.event
@@ -87,14 +90,15 @@ async def add_currency(ctx): # allows me to add currencies
 # HELP COMMAND STUFF =================================================================#
 
 
-@bot.group(invoke_without_command=True)
+@bot.group(invoke_without_command=True, aliases=['h'])
 async def help(ctx): # make this a docs page
     em = discord.Embed(title="Help Menu", description="Use '>help [command]' for more info.", color=c.purple())
     #embed_help.add_field(name="General commands:", value="server", inline=False)
+    em.add_field(name="**Commands:**", value="", inline=False)
     em.add_field(name="How to play", value="coins, accounts, taxes, wallet", inline=False)
-    em.add_field(name="Economy commands:", value="daily, init, balance, deposit, withdraw, transfer", inline=False)
+    em.add_field(name="Economy commands:", value="daily, init, balance, deposit, withdraw, transfer, beg", inline=False)
     em.add_field(name="Crypto commands:", value="holdings, view, buy, sell, list", inline=False)
-    em.add_field(name="Gambling commands:", value="**COMING SOON**", inline=False)
+    em.add_field(name="Gambling commands:", value="coinflip, lower", inline=False)
 
     await ctx.send(embed=em)
 
@@ -325,7 +329,7 @@ async def wallet(ctx):
     em = discord.Embed(title="Wallet", description="All about your Wallet.")
     em.add_field(name="What is my Wallet for?",
                  value="Your wallet is used for money on your person. "
-                       "Any money you make daily, gambling or transfers go into your wallet.\n"
+                       "Any money you make daily, gambling or transfers use your wallet.\n"
                        "For more info on daily, use; '>help daily'\n"
                        "For more info on gambling, use; '>help gambling'\n"
                        "For more infor on transfers, use; '>help transfer'",
@@ -341,20 +345,271 @@ async def wallet(ctx):
     await ctx.send(embed=em)
 
 @help.command()
-async def gambling(ctx):
-    em = discord.Embed(title="Gambling", description="All about Gambling.")
-    em.add_field(name="Not implemented yet :/",
-                 value="Coming Soon!",
+async def beg(ctx):
+    em = discord.Embed(title="Begging", description=f"{'Beg for money if you dont got any.' if randint(0,10)!=1 else f'No money {bot.get_emoji(977639838641688596)} ?'}")
+    em.add_field(name="Usage",value="'>beg'",inline=False)
+    em.add_field(name="Description",
+                 value="You can get for money and earn between $10 and $75.\n"
+                       f"Note that you can only beg if you have less than ${poverty_line} in both your wallet and in both bank account balances.\n"
+                       f"This means that if you have more than ${poverty_line} in any of your account balances or wallet, you cannot beg.\n\n"
+                       f"For more info on accounts, use; '>help accounts'\n"
+                       f"For more info on your wallet, use; '>help wallet'",
                  inline=False)
 
     await ctx.send(embed=em)
+
+@help.command()
+async def coin_flip(ctx):
+    em = discord.Embed(title="Coin Flip", description=f"{'Flip a coin and gamble money' if randint(0,10)!=1 else 'Ah... making life decisions on the flip of a coin. a smart chap, arent ya? ya bloody wanker'}")
+    em.add_field(name="Usage",
+                 value="'>coin_flip [**heads or tails**] [**amount**]' or '>flip [**heads or tails**] [**amount**]' or '>cf [**heas or tails**] [**amount**]'",
+                 inline=False)
+    em.add_field(name="Description",
+                 value=f"Choose either heads or tails(or 'h'/'t') and bet an amount of money from your wallet.\n"
+                       f"If your guess is correct, you win that amount.\n"
+                       f"If you lose, you lose that amount.\n\n"
+                       f"For more info on your wallet, use; '>help wallet'",
+                 inline=False)
+
+    await ctx.send(embed=em)
+
+@help.command()
+async def lower(ctx):
+    em = discord.Embed(title="Lower",
+                       description=f"{'Choose a number and gamble money' if randint(0, 10) != 1 else f'Lower? yeah thats where my stocks been going {bot.get_emoji(980704198637281290)}'}")
+    em.add_field(name="Usage",
+                 value="'>lower [**guess**] [**amount**]' or '>low [**guess**] [**amount**]'",
+                 inline=False)
+    em.add_field(name="Description",
+                 value=f"Choose a number form 1-99 and bet an amount of money from your wallet.\n"
+                       f"The bot generates a number form 0-100.\n"
+                       f"If your number is lower than that bot's, you win that amount. if your number is higher than 65, you win more money proportional to how high your number was\n"
+                       f"If you lose, you lose that amount.\n\n"
+                       f"For more info on your wallet, use; '>help wallet'",
+                 inline=False)
+
+    await ctx.send(embed=em)
+
+
+
+# GAMBLING COMMANDS ========================================================================#
+
+
+@bot.command()
+async def beg(ctx):
+    """
+    Command that lets the user beg for more money.
+
+    The user can only use this command if they have less money than the poverty line in both wallet and bank accounts.
+
+    Examples:
+        poverty_line =50
+
+        user.wallet = 40
+        user.bank.tfa.balance = 40
+        user.bank.ntfa.balance = 40
+        >>>beg()
+
+        user.wallet = 40
+        user.bank.tfa.balance = 51
+        user.bank.ntfa.balance = 40
+        will not beg.
+    """
+
+    if ctx.author.bot: return
+
+    user = User(ctx.author.id)
+
+    em = discord.Embed(title="Beg for money")
+
+    # verifies if the user is poor enough
+    # only works if the user has less than the poverty line
+    if (user.wallet > poverty_line or
+        user.accounts["tfa"]["balance"] > poverty_line or
+            user.accounts["ntfa"]["balance"] > poverty_line):
+        em.add_field(name="Error",
+                     value=f"You have too much money!\n"
+                           f" You must have less than ${poverty_line} in both your bank accounts and wallet!\n"
+                           f"run '>bal' to determine how much money you have.",
+                     inline=False)
+
+    else: # otherwise gives the user money
+
+        amount = randint(10, 75)
+        user.wallet += amount
+        user.save()
+
+        if randint(1,10) ==1: # no money ?
+            msg = f"No money {bot.get_emoji(977639838641688596)} ?"
+        else: msg = "You begged for money"
+
+        em.add_field(name=msg, value=f"You begged and earned ${amount}")
+
+    await ctx.send(embed=em)
+
+@bot.command(aliases=["flip", "cf"])
+async def coin_flip(ctx, guess:str, amount:float):
+    """
+    Coinflip command.
+
+    the user guesses either heads or tails and bets a certain amount.
+    if the user's guess is the same as the coin, they earn :amount: dollars
+    if they lose, they lose :amount: dollars
+    """
+
+    if ctx.author.bot: return # dosent answer to bots
+
+    em = discord.Embed(title="Coin Flip")
+    user = User(ctx.author.id)
+
+    # the user can only gamble positive amounts of money
+    if amount <= 0:
+        em.add_field(name="Error",
+                     value="Must bet a positive amount of money",
+                     inline=False)
+        await ctx.send(embed=em)
+        return
+
+    # checks if the user has enough money
+    if amount > user.wallet:
+        if randint(1,10) ==1: # no money ?
+            msg = f"No money {bot.get_emoji(977639838641688596)} ?"
+        else: msg = "Error"
+
+        em.add_field(name=msg,
+                     value=f"Not enough money to gamble.",
+                     inline=False)
+        em.add_field(name="Has:",
+                     value=f"${user.wallet}",
+                     inline=False)
+        em.add_field(name="Needs:",
+                     value=f"${amount}",
+                     inline=False)
+        await ctx.send(embed=em)
+        return
+
+    # checks if the guess is formatted right
+    if guess.lower() not in ["tails", "t", "heads", "h"]:
+        em.add_field(name="Error",
+                     value=f"Must format guess properly!\n"
+                           f"Must look like: 'tails', 't', 'heads', 'h'\n"
+                           f"You guessed: {guess}",
+                     inline=False)
+        await ctx.send(embed=em)
+        return
+
+    # rolls the dice
+    if randint(1,2) == 1:
+        user.wallet += 2*amount
+        em.add_field(name="You Won!",
+                     value=f"You gained ${2*amount}!",
+                     inline=False)
+    else:
+        user.wallet -=amount
+        em.add_field(name="You Lost!",
+                     value=f"You lost ${amount}!",
+                     inline=False)
+
+    user.save() # saves the user
+    await ctx.send(embed=em)
+
+@bot.command(asliases=['low'])
+async def lower(ctx, guess:int, amount:float):
+    """
+    Lower/Upper command.
+
+    The user guesses a number from 1-99(guess) and bets a certain amount(amount).
+    The computer also generates a number from 0-100(reference).
+    if guess is higher than referece, deduct amount from the user wallet.
+    otherwise, depending on how high your vote was, add multiples of amount to the wallet.
+    """
+
+    if ctx.author.bot: return # dosent answer to bots
+
+    em = discord.Embed(title="Lower")
+    user = User(ctx.author.id)
+
+    # the user can only gamble positive amounts of money
+    if amount <= 0:
+        em.add_field(name="Error",
+                     value="Must bet a positive amount of money",
+                     inline=False)
+        await ctx.send(embed=em)
+        return
+
+    # checks if the user has enough money
+    if amount > user.wallet:
+        if randint(1, 10) == 1:  # no money ?
+            msg = f"No money {bot.get_emoji(977639838641688596)} ?"
+        else:
+            msg = "Error"
+
+        em.add_field(name=msg,
+                     value=f"Not enough money to gamble.",
+                     inline=False)
+        em.add_field(name="Has:",
+                     value=f"${user.wallet}",
+                     inline=False)
+        em.add_field(name="Needs:",
+                     value=f"${amount}",
+                     inline=False)
+        await ctx.send(embed=em)
+        return
+
+    # the user's guess must fall between [1-99]
+    if guess >99 or guess < 1:
+        em.add_field(name="Error",
+                     value="Value must be within 1-99",
+                     inline=False)
+        await ctx.send(embed=em)
+        return
+
+    reference = randint(0,100) # the number generated by the computer.
+
+    if guess <= reference: # if the user number is less than the generated on, the user wins
+        won=True
+        # if less than 10, give half
+        if guess <= 10:
+            change = 0.5*amount
+            user.wallet += change
+
+        # if higher than 65, 0.25x more for every 5 points
+        elif guess > 65:
+            change = int(amount + (0.05*(guess - 65) * amount))
+            user.wallet += change
+
+        else: # otherwise
+            change = amount
+            user.wallet += change
+
+    else: # if the user num is higher, then they lose money
+        won=False
+        change = amount
+        user.wallet -= change
+
+    # make the embed
+    em.add_field(name=f"You {'Won' if won else 'Lost'} {'' if won else '' if randint(0,10)!=1 else bot.get_emoji(980704152550277152)}!",
+                 value=f"You guessed: {guess}\nThe reference was: {reference}",
+                 inline=False)
+    em.add_field(name=f"You {'Gained' if won else 'Lost'}:",
+                 value=f"{change} coins!",
+                 inline=False)
+    em.add_field(name="Wallet",
+                 value=f"You now have: {user.wallet} coins!",
+                 inline=False)
+    em.add_field(name=f"{'Congratulations!' if won else 'Better luck next time!'}",
+                 value=f"Be sure to gimme more money- I MEAN, play again!!",
+                 inline=False)
+
+    user.save() # saves
+    await ctx.send(embed=em) # sends the embed
 
 
 # GENERAL ECONOMY COMMANDS =================================================================#
 
 
 @bot.command(aliases=["d"])
-@commands.cooldown(1, 43200, commands.BucketType.user) # only used once per day.
+@commands.cooldown(1, 86400, commands.BucketType.user) # only used once per day.
 async def daily(ctx): # daily command to give the user money into their wallet
 
     if ctx.author.bot: return  # does not answer to bots
@@ -812,10 +1067,14 @@ async def on_message(message): # if kuki annoys me, reply
 #   simulate all currencies
 #   add new currencies if need be
 #   reload constants
+#   add shares
+#   print cache
 #   change status?
 simulate_cache.start()
 add_currencies.start()
 reload_constants.start()
+add_shares.start()
+print_cache.start()
 # changes status
 
 bot.run(imp_info["test token"]) # runs the bot

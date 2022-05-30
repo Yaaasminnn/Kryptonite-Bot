@@ -19,6 +19,7 @@ max_market_cap = constants["max market cap"]
 shares_per_interval = constants["shares per interval"]
 min_coins = constants["min_coins"]
 max_coins = constants["max_coins"]
+poverty_line = constants["poverty line"]
 
 @loop(minutes=1)
 async def reload_constants():
@@ -41,6 +42,7 @@ async def reload_constants():
     shares_per_interval = constants["shares per interval"]
     min_coins = constants["min_coins"]
     max_coins = constants["max_coins"]
+    poverty_line = constants["poverty line"]
 
 async def change_constants(constant_name, value):
     """

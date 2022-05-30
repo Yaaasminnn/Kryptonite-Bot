@@ -26,25 +26,15 @@
 - - list currencies
 - - history (1.2?)
 - ### Other/lotto
-- - lotto commands (higher, lower, betting etc) (1.1)
+- - lotto commands (lower, coinflip)
 - - daily
 - - help
 
 # Todo:
 
-- ### finish crypto features
-- - can add shares to the total.
-- - - will be automatically done every month (1.1)
- 
-- ### Experiment with currencies and their stability when trading with charts.
-- - test with all the max constants(need to resolve the json issue) (1.1)
-
 - ### Add in the discord bot boilerplate.
 - - Asyncronize the backend (1.1)
-- - - just the class methods 
-- - cache currencies and relaod constants every minute
-- - front end(lots of embeds (prob not in 1.0)
-- - make everything from floats to ints/100
+- - - just the class methods
 - - show the value of our holdings, not just the shares (store that in json db)
 
 - ### deploy to the rpi
@@ -53,10 +43,6 @@
 - - - - or just other things to log? 
 - - - have the pi use rsync and crontab?
 - - - backup to my pc? local? cloud?
-
-- ### Create webpages (not in 1.0)
-- - show info on any currency
-- - show info on a user?
     
 - ### Currency history can be seen via a visual graph (not in 1.0)
 

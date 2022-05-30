@@ -49,7 +49,19 @@ async def add_currencies(): # determines if we should add a currency or not
             coin = CryptoCurrency()
             print(f"Added new currency named {coin.name}!")
 
+@loop(hours=24)
+async def add_shares(): # adds more shares to all coins once every day
+    for currency_dict in crypto_cache:
+        coin = CryptoCurrency(currency_dict)
+        coin.total_shares += randint(100, 500)
+        coin.save()
+        coin.cache()
 
+@loop(hours=1)
+async def print_cache(): # prints the cache every hour
+    print("CRYPTO CACHE:")
+    for currency_dict in crypto_cache:
+        print(CryptoCurrency(currency_dict))
 
 class CryptoCurrency:
     def __init__(self, currency:dict=None):
@@ -551,9 +563,9 @@ class CryptoCurrency:
         )
 
     def __str__(self):
-        return f"name: {self.name}, created date: {self.creation_date}, uid: {self.uid}, total_shares: {self.total_shares}, market_cap: {self.market_cap}, " \
-               f"delete_value: {self.delete_value}, value: {self.value}, Vmax_mag: {self.Vmax_mag}, threshold: {self.threshold}, " \
-               f"Tmax_mag: {self.Tmax_mag}, values: {self.values}"
+        return f"name: {self.name}, created date: {self.creation_date}, uid: {self.uid}, total_shares: {self.total_shares}, market_cap: {self.market_cap},\n" \
+               f"delete_value: {self.delete_value}, value: {self.value}, Vmax_mag: {self.Vmax_mag}, threshold: {self.threshold},\n" \
+               f"Tmax_mag: {self.Tmax_mag},\nvalues: {self.values}\n\n"
 
     @staticmethod
     def exists(coin_name:str): # determines if a currency exists in the database
