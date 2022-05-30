@@ -94,7 +94,6 @@ async def add_currency(ctx): # allows me to add currencies
 async def help(ctx): # make this a docs page
     em = discord.Embed(title="Help Menu", description="Use '>help [command]' for more info.", color=c.purple())
     #embed_help.add_field(name="General commands:", value="server", inline=False)
-    em.add_field(name="**Commands:**", value="", inline=False)
     em.add_field(name="How to play", value="coins, accounts, taxes, wallet", inline=False)
     em.add_field(name="Economy commands:", value="daily, init, balance, deposit, withdraw, transfer, beg", inline=False)
     em.add_field(name="Crypto commands:", value="holdings, view, buy, sell, list", inline=False)
