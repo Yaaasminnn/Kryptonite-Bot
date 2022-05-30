@@ -33,14 +33,14 @@
 
 # Deployment:
 - requires pycord. 
-``
+- ``
 git clone https://github.com/MonEmperor/Kryptonite-Bot # clone the repo
 cd Kryptonite-Bot
 ``
 - create a file named ``imp_info.json`` in ``src/kryptonite_bot``. there is a template in said directory. place your discord bot info there.
 - - everything in the file is self-explanatory. the "owner id" key is for your discord user ID.
 - lastly, create a file named ``crypto_currencies.json`` in the ``src/db`` directory. and make it look like this:
-``
+- ``
 {
 	"currencies": [],
 	"count": 0
