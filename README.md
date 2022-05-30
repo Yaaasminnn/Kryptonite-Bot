@@ -33,7 +33,7 @@
 # Todo:
 
 - ### Add in the discord bot boilerplate.
-- - Asyncronize the backend (1.1)
+- - Asyncronize the backend (1.2)
 - - - just the class methods
 - - show the value of our holdings, not just the shares (store that in json db)
 
@@ -44,9 +44,7 @@
 - - - have the pi use rsync and crontab?
 - - - backup to my pc? local? cloud?
     
-- ### Currency history can be seen via a visual graph (not in 1.0)
-
-- ### Gambling features (not in 1.0, but will be added ASAP)
+- ### Currency history can be seen via a visual graph (not in 1.1)
 
 # Issues:
 - at arbitrarily large values, python seems to round the numbers to '1e+X'

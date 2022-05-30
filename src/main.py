@@ -595,7 +595,7 @@ async def lower(ctx, guess:int, amount:float):
                  value=f"{change} coins!",
                  inline=False)
     em.add_field(name="Wallet",
-                 value=f"You now have: {user.wallet} coins!",
+                 value=f"You now have: {round(user.wallet,4)} coins!",
                  inline=False)
     em.add_field(name=f"{'Congratulations!' if won else 'Better luck next time!'}",
                  value=f"Be sure to gimme more money- I MEAN, play again!!",
@@ -644,9 +644,9 @@ async def bal(ctx): # gives the current balance
     user = User(ctx.author.id)
 
     em = discord.Embed(title="User Balance")
-    em.add_field(name="Wallet", value=f"${user.wallet}", inline=False)
-    em.add_field(name="TFA", value=f"${user.accounts['tfa']['balance']}", inline=False)
-    em.add_field(name="NTFA", value=f"${user.accounts['ntfa']['balance']}", inline=False)
+    em.add_field(name="Wallet", value=f"${round(user.wallet, 4)}", inline=False)
+    em.add_field(name="TFA", value=f"${round(user.accounts['tfa']['balance'], 4)}", inline=False)
+    em.add_field(name="NTFA", value=f"${round(user.accounts['ntfa']['balance'],4)}", inline=False)
 
     await ctx.send(embed=em)
 
@@ -795,9 +795,9 @@ async def view(ctx, coin_name:str): # view info on a specific currency
     for currency_dict in crypto_cache:
         if currency_dict["name"] == coin_name.lower():
             coin = CryptoCurrency(currency_dict)
-            em.add_field(name="Value", value=f"${coin.value}", inline=False)
+            em.add_field(name="Value", value=f"${round(coin.value,4)}", inline=False)
             em.add_field(name="Total coins", value=f"{coin.total_shares} coins", inline=False)
-            em.add_field(name="Market cap", value=f"${coin.market_cap}", inline=False)
+            em.add_field(name="Market cap", value=f"${round(coin.market_cap,4)}", inline=False)
 #            msg += f"{coin.name}:    Value: ${coin.value}, Total coins: ${coin.total_shares}, Market cap: ${coin.market_cap}"
             break
 
@@ -816,7 +816,7 @@ async def list(ctx): # view a list of all currencies and their values
     em = discord.Embed(title="List cryptocurrencies")
     for currency_dict in crypto_cache: # goes through all currencies
         coin = CryptoCurrency(currency_dict)
-        msg += f"{coin.name}  -  ${coin.value}\n"
+        msg += f"{coin.name}  -  ${round(coin.value,4)}\n"
 
     em.add_field(name="Currencies", value=msg)
     await ctx.send(embed=em)
