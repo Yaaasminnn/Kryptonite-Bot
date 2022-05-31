@@ -93,17 +93,16 @@ async def add_currency(ctx): # allows me to add currencies
 @bot.group(invoke_without_command=True, aliases=['h'])
 async def help(ctx): # make this a docs page
     em = discord.Embed(title="Help Menu", description="Use '>help [command]' for more info.", color=c.purple())
-    #embed_help.add_field(name="General commands:", value="server", inline=False)
     em.add_field(name="How to play", value="coins, accounts, taxes, wallet", inline=False)
     em.add_field(name="Economy commands:", value="daily, init, balance, deposit, withdraw, transfer, beg", inline=False)
     em.add_field(name="Crypto commands:", value="holdings, view, buy, sell, list", inline=False)
-    em.add_field(name="Gambling commands:", value="coinflip, lower", inline=False)
+    em.add_field(name="Gambling commands:", value="coin_flip, lower", inline=False)
 
     await ctx.send(embed=em)
 
 @help.command()
 async def daily(ctx):
-    em = discord.Embed(title="Daily", description="daily command to get more money.")
+    em = discord.Embed(title="Daily", description="daily command to get more money.", color=c.purple())
     em.add_field(name="Usage", value="'>daily' or '>d'", inline=False)
     em.add_field(name="Description", value="Can earn $50-$350 dollars added to your bank account once every 24 hours.\n\n"
                                            "For more info on your wallet, use; '>help wallet'", inline=False)
@@ -112,7 +111,7 @@ async def daily(ctx):
 
 @help.command()
 async def init(ctx):
-    em = discord.Embed(title="Init", description="Initialize your account.")
+    em = discord.Embed(title="Init", description="Initialize your account.", color=c.purple())
     em.add_field(name="Usage", value="'>init'", inline=False)
     em.add_field(name="Description", value="Creates your bank accounts and gives your wallet a starting value of $200.\n"
                                            " Use this command to get started.\n\n"
@@ -123,7 +122,7 @@ async def init(ctx):
 
 @help.command()
 async def bal(ctx):
-    em = discord.Embed(title="Balance", description="View your current balance.")
+    em = discord.Embed(title="Balance", description="View your current balance.", color=c.purple())
     em.add_field(name="Usage", value="'>b', '>balance' or '>bal'", inline=False)
     em.add_field(name="Description", value="View how much money you have in your wallet and bank accounts.\n\n"
                                            "For more info on your accounts, use; '>help accounts'", inline=False)
@@ -135,7 +134,7 @@ async def bal(ctx):
 
 @help.command()
 async def holdings(ctx):
-    em = discord.Embed(title="Holdings", description="View your investments.")
+    em = discord.Embed(title="Holdings", description="View your investments.", color=c.purple())
     em.add_field(name="Usage", value="'>holdings', '>investments' or '>i'", inline=False)
     em.add_field(name="Description", value="View the number of coins you currently own across both accounts.\n\n"
                                            "For more info on accounts, use; '>help accounts'\n"
@@ -149,7 +148,7 @@ async def holdings(ctx):
 
 @help.command()
 async def transfer(ctx):
-    em = discord.Embed(title="Transfer", description="Transfer money from your wallet to another's wallet.")
+    em = discord.Embed(title="Transfer", description="Transfer money from your wallet to another's wallet.", color=c.purple())
     em.add_field(name="Usage", value="'>transfer [**amount**] [**@user**]' or '>t [**amount**] [**@user**]'", inline=False)
     em.add_field(name="Example", value=">transfer 500 @user\n"
                                        "*Transfers $500 from your wallet to @user's wallet*", inline=False)
@@ -162,7 +161,7 @@ async def transfer(ctx):
 
 @help.command()
 async def withdraw(ctx):
-    em = discord.Embed(title="Withdraw", description="Withdraw money from the bank.")
+    em = discord.Embed(title="Withdraw", description="Withdraw money from the bank.", color=c.purple())
     em.add_field(name="Usage", value="'>withdraw [**ntfa or tfa**] [**amount**]' or '>bw  [**ntfa or tfa**] [**amount**]'", inline=False)
     em.add_field(name="Example", value=">withdraw tfa 500\n"
                                        "*Withdraws $500 from your tax-free account*", inline=False)
@@ -179,7 +178,7 @@ async def withdraw(ctx):
 
 @help.command()
 async def deposit(ctx):
-    em = discord.Embed(title="Deposit", description="Deposit money into the bank.")
+    em = discord.Embed(title="Deposit", description="Deposit money into the bank.", color=c.purple())
     em.add_field(name="Usage", value="'>deposit [**ntfa or tfa**] [**amount**]' or '>bd  [**ntfa or tfa**] [**amount**]'", inline=False)
     em.add_field(name="Example", value=">deposit tfa 500\n"
                                        "*Deposits $500 into your tax-free account*", inline=False)
@@ -196,7 +195,7 @@ async def deposit(ctx):
 
 @help.command()
 async def view(ctx):
-    em = discord.Embed(title="View", description="View the details of a Cryptocurrency.")
+    em = discord.Embed(title="View", description="View the details of a Cryptocurrency.", color=c.purple())
     em.add_field(name="Usage", value="'>view [**coin name**]' or '>v  [**coin name**]'", inline=False)
     em.add_field(name="Example", value=">view kuki-bux\n"
                                        "*Views the value, total coins and market cap of kuki-bux*", inline=False)
@@ -209,7 +208,7 @@ async def view(ctx):
 
 @help.command()
 async def list(ctx):
-    em = discord.Embed(title="List", description="View the details of all Cryptocurrencies.")
+    em = discord.Embed(title="List", description="View the details of all Cryptocurrencies.", color=c.purple())
     em.add_field(name="Usage", value="'>list' or '>l'", inline=False)
     em.add_field(name="Description",
                  value=f"View the value, total coins and market cap of all cryptocurrencies.\n\n"
@@ -219,7 +218,7 @@ async def list(ctx):
 
 @help.command()
 async def buy(ctx):
-    em = discord.Embed(title="Buy", description="Buy a cryptocurrency.")
+    em = discord.Embed(title="Buy", description="Buy a cryptocurrency.", color=c.purple())
     em.add_field(name="Usage", value="'>buy [**ntfa or tfa**] [**coin name**] [**num coins to buy**]',\n '>purchase [**ntfa or tfa**] [**coin name**] [**num coins to buy**]'\n or '>p [**ntfa or tfa**] [**coin name**] [**num coins to buy**]'", inline=False)
     em.add_field(name="Example", value=f">buy ntfa {crypto_cache[0]['name']} 1\n"
                                        f"*Buys 1 {crypto_cache[0]['name']} coin for your ntfa account. this will be taxed*")
@@ -237,7 +236,7 @@ async def buy(ctx):
 
 @help.command()
 async def sell(ctx):
-    em = discord.Embed(title="Sell", description="Sell a cryptocurrency.")
+    em = discord.Embed(title="Sell", description="Sell a cryptocurrency.", color=c.purple())
     em.add_field(name="Usage",
                  value="'>sell [**ntfa or tfa**] [**coin name**] [**num coins to buy**]'\nor '>s [**ntfa or tfa**] [**coin name**] [**num coins to buy**]'",
                  inline=False)
@@ -257,7 +256,7 @@ async def sell(ctx):
 
 @help.command()
 async def coins(ctx):
-    em = discord.Embed(title="Coins", description="All about coins and cryptocurrencies")
+    em = discord.Embed(title="Coins", description="All about coins and cryptocurrencies", color=c.purple())
     em.add_field(name="What are cryptocurrencies?",
                  value=f"Cryptocurrencies are coins that users can invest in using their money from their bank accounts.",
                  inline=False)
@@ -279,7 +278,7 @@ async def coins(ctx):
 
 @help.command()
 async def accounts(ctx):
-    em = discord.Embed(title="Accounts", description="All about your bank accounts.")
+    em = discord.Embed(title="Accounts", description="All about your bank accounts.", color=c.purple())
     em.add_field(name="What are accounts?",
                  value="Bank accounts are used to store money and investments. simple as that.\n",
                  inline=False)
@@ -310,7 +309,7 @@ async def accounts(ctx):
 
 @help.command()
 async def taxes(ctx):
-    em = discord.Embed(title="Taxes", description="All about your taxes.")
+    em = discord.Embed(title="Taxes", description="All about your taxes.", color=c.purple())
     em.add_field(name="When are there taxes used??",
                  value="Taxes are only placed when the user is buying a currency using a ntfa account. \n"
                        "Otherwise, all interactions are tax-free\n"
@@ -325,7 +324,7 @@ async def taxes(ctx):
 
 @help.command()
 async def wallet(ctx):
-    em = discord.Embed(title="Wallet", description="All about your Wallet.")
+    em = discord.Embed(title="Wallet", description="All about your Wallet.", color=c.purple())
     em.add_field(name="What is my Wallet for?",
                  value="Your wallet is used for money on your person. "
                        "Any money you make daily, gambling or transfers use your wallet.\n"
@@ -345,7 +344,7 @@ async def wallet(ctx):
 
 @help.command()
 async def beg(ctx):
-    em = discord.Embed(title="Begging", description=f"{'Beg for money if you dont got any.' if randint(0,10)!=1 else f'No money {bot.get_emoji(977639838641688596)} ?'}")
+    em = discord.Embed(title="Begging", description=f"{'Beg for money if you dont got any.' if randint(0,10)!=1 else f'No money {bot.get_emoji(977639838641688596)} ?'}", color=c.purple())
     em.add_field(name="Usage",value="'>beg'",inline=False)
     em.add_field(name="Description",
                  value="You can get for money and earn between $10 and $75.\n"
@@ -359,7 +358,7 @@ async def beg(ctx):
 
 @help.command()
 async def coin_flip(ctx):
-    em = discord.Embed(title="Coin Flip", description=f"{'Flip a coin and gamble money' if randint(0,10)!=1 else 'Ah... making life decisions on the flip of a coin. a smart chap, arent ya? ya bloody wanker'}")
+    em = discord.Embed(title="Coin Flip", description=f"{'Flip a coin and gamble money' if randint(0,10)!=1 else 'Ah... making life decisions on the flip of a coin. a smart chap, arent ya? ya bloody wanker'}", color=c.purple())
     em.add_field(name="Usage",
                  value="'>coin_flip [**heads or tails**] [**amount**]' or '>flip [**heads or tails**] [**amount**]' or '>cf [**heas or tails**] [**amount**]'",
                  inline=False)
@@ -375,7 +374,7 @@ async def coin_flip(ctx):
 @help.command()
 async def lower(ctx):
     em = discord.Embed(title="Lower",
-                       description=f"{'Choose a number and gamble money' if randint(0, 10) != 1 else f'Lower? yeah thats where my stocks been going {bot.get_emoji(980704198637281290)}'}")
+                       description=f"{'Choose a number and gamble money' if randint(0, 10) != 1 else f'Lower? yeah thats where my stocks been going {bot.get_emoji(980704198637281290)}'}", color=c.purple())
     em.add_field(name="Usage",
                  value="'>lower [**guess**] [**amount**]' or '>low [**guess**] [**amount**]'",
                  inline=False)
@@ -419,7 +418,7 @@ async def beg(ctx):
 
     user = User(ctx.author.id)
 
-    em = discord.Embed(title="Beg for money")
+    em = discord.Embed(title="Beg for money", color=c.yellow())
 
     # verifies if the user is poor enough
     # only works if the user has less than the poverty line
@@ -447,6 +446,7 @@ async def beg(ctx):
     await ctx.send(embed=em)
 
 @bot.command(aliases=["flip", "cf"])
+@commands.cooldown(20, 30, commands.BucketType.user) # max usage of 20 times and have to wait 30 seconds afterward
 async def coin_flip(ctx, guess:str, amount:float):
     """
     Coinflip command.
@@ -458,7 +458,7 @@ async def coin_flip(ctx, guess:str, amount:float):
 
     if ctx.author.bot: return # dosent answer to bots
 
-    em = discord.Embed(title="Coin Flip")
+    em = discord.Embed(title="Coin Flip",color=c.green())
     user = User(ctx.author.id)
 
     # the user can only gamble positive amounts of money
@@ -499,9 +499,9 @@ async def coin_flip(ctx, guess:str, amount:float):
 
     # rolls the dice
     if randint(1,2) == 1:
-        user.wallet += 2*amount
+        user.wallet += amount
         em.add_field(name="You Won!",
-                     value=f"You gained ${2*amount}!",
+                     value=f"You gained ${amount}!",
                      inline=False)
     else:
         user.wallet -=amount
@@ -513,6 +513,7 @@ async def coin_flip(ctx, guess:str, amount:float):
     await ctx.send(embed=em)
 
 @bot.command(asliases=['low'])
+@commands.cooldown(20, 30, commands.BucketType.user) # max usage of 20 times and have to wait 30 seconds afterward
 async def lower(ctx, guess:int, amount:float):
     """
     Lower/Upper command.
@@ -525,7 +526,7 @@ async def lower(ctx, guess:int, amount:float):
 
     if ctx.author.bot: return # dosent answer to bots
 
-    em = discord.Embed(title="Lower")
+    em = discord.Embed(title="Lower",color=c.green())
     user = User(ctx.author.id)
 
     # the user can only gamble positive amounts of money
@@ -567,12 +568,12 @@ async def lower(ctx, guess:int, amount:float):
 
     if guess <= reference: # if the user number is less than the generated on, the user wins
         won=True
-        # if less than 10, give half
-        if guess <= 10:
-            change = 0.5*amount
+        # if less than 35, give 0.25x less for every 5 points lower
+        if guess < 35:
+            change = max(1, int(amount + (0.05*(guess - 35)*amount) ) )
             user.wallet += change
 
-        # if higher than 65, 0.25x more for every 5 points
+        # if higher than 65, 0.25x more for every 5 points higher
         elif guess > 65:
             change = int(amount + (0.05*(guess - 65) * amount))
             user.wallet += change
@@ -620,7 +621,7 @@ async def daily(ctx): # daily command to give the user money into their wallet
 
     # creates the embed.
     em = discord.Embed(title="Daily Money",
-                       description=f"You recived **${amount}** the money has been deposited into your wallet")
+                       description=f"You recived **${amount}** the money has been deposited into your wallet", color=c.orange())
 
     await ctx.send(embed=em)
 
@@ -631,7 +632,7 @@ async def init(ctx): # creates an account
 
     User(ctx.author.id) # loads up the user
 
-    em = discord.Embed(title="Created your account.")
+    em = discord.Embed(title="Created your account.", color=c.orange())
 
     await ctx.send(embed=em)
 
@@ -642,7 +643,7 @@ async def bal(ctx): # gives the current balance
 
     user = User(ctx.author.id)
 
-    em = discord.Embed(title="User Balance")
+    em = discord.Embed(title="User Balance", color=c.orange())
     em.add_field(name="Wallet", value=f"${round(user.wallet, 4)}", inline=False)
     em.add_field(name="TFA", value=f"${round(user.accounts['tfa']['balance'], 4)}", inline=False)
     em.add_field(name="NTFA", value=f"${round(user.accounts['ntfa']['balance'],4)}", inline=False)
@@ -673,7 +674,7 @@ async def holdings(ctx, account_name=None):
     if ctx.author.bot: return  # does not answer to bots
 
     user = User(ctx.author.id) # loads the user
-    em = discord.Embed(title="User Holdings") # the embed used.
+    em = discord.Embed(title="User Holdings", color=c.orange()) # the embed used.
 
     if account_name is None: # load all accounts if nothing is specified
         em.add_field(name="TFA",
@@ -707,7 +708,7 @@ async def transfer(ctx, amount:float, member:discord.Member):
 
     user = User(ctx.author.id)
 
-    em = discord.Embed(title="Transfer Money")
+    em = discord.Embed(title="Transfer Money", color=c.orange())
 
     if amount<=0.0: # amount has to be greater than 0
         em.add_field(name="Transfer", value="Amount must be a positive number")
@@ -735,7 +736,7 @@ async def withdraw(ctx, account_name:str, amount:float):
 
     if ctx.author.bot: return  # does not answer to bots
 
-    em = discord.Embed(title="Bank Withdraw")
+    em = discord.Embed(title="Bank Withdraw", color=c.orange())
 
     if amount <=0.0:
         em.add_field(name="Error", value="Amount must be a positive number")
@@ -762,7 +763,7 @@ async def deposit(ctx, account_name: str, amount: float):
 
     if ctx.author.bot: return  # does not answer to bots
 
-    em = discord.Embed(title="Bank Deposit")
+    em = discord.Embed(title="Bank Deposit", color=c.orange())
 
     if amount <= 0.0:
         em.add_field(name="Error", value="Amount must be a positive number")
@@ -788,7 +789,7 @@ async def view(ctx, coin_name:str): # view info on a specific currency
 
     if ctx.author.bot: return  # does not answer to bots
 
-    em = discord.Embed(title=f"{coin_name} analytics")
+    em = discord.Embed(title=f"{coin_name} analytics", color=c.blue())
 
     # looks through the cache for the currency with the same name. if it matches, return it
     for currency_dict in crypto_cache:
@@ -812,7 +813,7 @@ async def list(ctx): # view a list of all currencies and their values
     if ctx.author.bot: return  # does not answer to bots
 
     msg = ""
-    em = discord.Embed(title="List cryptocurrencies")
+    em = discord.Embed(title="List cryptocurrencies", color=c.blue())
     for currency_dict in crypto_cache: # goes through all currencies
         coin = CryptoCurrency(currency_dict)
         msg += f"{coin.name}  -  ${round(coin.value,4)}\n"
@@ -842,7 +843,7 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
 
     if ctx.author.bot: return  # does not answer to bots
 
-    em = discord.Embed(title="Purchase") # sale
+    em = discord.Embed(title="Purchase", color=c.blue()) # sale
 
     if shares <1: # ensures the number of shares bought is at least 1
         em.add_field(name="Error", value="You must purchase at least 1 share.")
@@ -850,6 +851,15 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
         return
 
     shares = floor(shares) # makes sure all shares bought are int. not float.
+
+    if user.shares_exceeds_trade_limit(shares): # if the user has attempted to trade more shares than they are allowed to.
+        print("fg")
+        em.add_field(name="Error", value="Shares exceed trading limit.", inline=False)
+        em.add_field(name="To buy:", value=f"{shares}", inline=False)
+        em.add_field(name="Max:", value=f"{trading_limit_shares}", inline=False)
+        await ctx.send(embed=em)
+        
+        return
 
     user = User(ctx.author.id) # loads the user
 
@@ -887,8 +897,8 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
     # a number of checks to ensure the purchase is valid
     if not user.has_enough_balance(account_name=account_name, cost=total): # if the user cannot afford to pay
         em.add_field(name="Error", value="Does not have enough money.", inline=False)
-        em.add_field(name="Has:", value=f"${user.accounts[account_name]['balance']}", inline=False)
-        em.add_field(name="Needs:", value=f"${total}", inline=False)
+        em.add_field(name="Has:", value=f"${round(user.accounts[account_name]['balance'],4)}", inline=False)
+        em.add_field(name="Needs:", value=f"${round(total,4)}", inline=False)
         em.add_field(name="Shares you can afford:", value=f"{int(user.accounts[account_name]['balance'] / coin.value)}", inline=False)
         await ctx.send(embed=em)
         """await ctx.send(f"Does not have enough money\n"
@@ -900,23 +910,12 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
     if user.volume_exceeds_trade_limit(account_name=account_name, volume=subtotal): # if the volume of the purchase exceeds the limit
         # uses subtotal instead of total
         em.add_field(name="Error", value="Subtotal exceeds trading limit.", inline=False)
-        em.add_field(name="Subtotal:", value=f"${subtotal}", inline=False)
+        em.add_field(name="Subtotal:", value=f"${round(subtotal,4)}", inline=False)
         em.add_field(name="Limit:", value=f"${taxed_trading_limit_dollars if account_name=='ntfa' else tax_free_trading_limit_dollars}", inline=False)
         """await ctx.send(f"subtotal exceeds trading limit\n"
                  f"subtotal: {subtotal}\n"
                  f"limit: {taxed_trading_limit_dollars if account_name=='ntfa' else tax_free_trading_limit_dollars}")"""
         await ctx.send(embed=em)
-        return
-
-    if user.shares_exceeds_trade_limit(shares_total): # if the user has attempted to trade more shares than they are allowed to.
-        # uses the shares_total
-        em.add_field(name="Error", value="Shares exceed trading limit.", inline=False)
-        em.add_field(name="To buy:", value=f"{shares_total}", inline=False)
-        em.add_field(name="Max:", value=f"{trading_limit_shares}", inline=False)
-        await ctx.send(embed=em)
-        """await ctx.send(f"Shares exceed trading limit. \n"
-                 f"to buy: {shares_total}\n"
-                 f"max:{trading_limit_shares}")"""
         return
 
     # if all those checks are passed, then make the purchase
@@ -933,7 +932,7 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
     user.save()
 
     # the embed showing success
-    em.add_field(name="Success", value=f"Successfully purchased {shares_traded} coin/s of {coin_name} for ${total}")
+    em.add_field(name="Success", value=f"Successfully purchased {shares_traded} coin/s of {coin_name} for ${round(total,4)}")
 
     await ctx.send(embed=em)
 
@@ -959,7 +958,7 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
 
     if ctx.author.bot: return  # does not answer to bots
 
-    em = discord.Embed(title="Sale") # the embed
+    em = discord.Embed(title="Sale", color=c.blue()) # the embed
 
     if shares <1: # ensures the number of shares bought is at least 1
         em.add_field(name="Error", value="You must purchase at least 1 share.")
@@ -967,6 +966,17 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
         return
 
     shares = floor(shares) # makes sure all shares bought are int. not float.
+
+    # if the user has attempted to trade more shares than they are allowed to.
+    if user.shares_exceeds_trade_limit(shares):
+        # uses the shares_total
+        em.add_field(name="Error", value="Shares exceed trading limit.", inline=False)
+        em.add_field(name="To buy:", value=f"{shares}", inline=False)
+        em.add_field(name="Max:", value=f"{trading_limit_shares}",inline=False)
+        await ctx.send(embed=em)
+       
+        return
+
 
     user = User(ctx.author.id) # loads the user
 
@@ -1014,24 +1024,12 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
     if user.volume_exceeds_trade_limit(account_name=account_name,volume=subtotal):
         # uses subtotal instead of total
         em.add_field(name="Error", value="Subtotal exceeds trading limit.", inline=False)
-        em.add_field(name="Subtotal:", value=f"${subtotal}", inline=False)
+        em.add_field(name="Subtotal:", value=f"${round(subtotal,4)}", inline=False)
         em.add_field(name="Limit:", value=f"${taxed_trading_limit_dollars if account_name=='ntfa' else tax_free_trading_limit_dollars}", inline=False)
         await ctx.send(embed=em)
         """await ctx.send(f"subtotal exceeds trading limit\n"
                  f"subtotal: {subtotal}\n"
                  f"limit: {taxed_trading_limit_dollars if account_name=='ntfa' else tax_free_trading_limit_dollars}")"""
-        return
-
-    # if the user has attempted to trade more shares than they are allowed to.
-    if user.shares_exceeds_trade_limit(shares_total):
-        # uses the shares_total
-        em.add_field(name="Error", value="Shares exceed trading limit.", inline=False)
-        em.add_field(name="To buy:", value=f"{shares_total}", inline=False)
-        em.add_field(name="Max:", value=f"{trading_limit_shares}",inline=False)
-        await ctx.send(embed=em)
-        """ctx.send(f"Shares exceed trading limit. \n"
-                 f"to buy: {shares_total}\n"
-                 f"max:{trading_limit_shares}")"""
         return
 
     # sets the new balance. if it passes the limit, it caps it
@@ -1048,7 +1046,7 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
     user.save()
 
     # the embed for successful trades
-    em.add_field(name="Success", value=f"Successfully sold {shares_traded} coin/s of {coin_name} for ${subtotal}")
+    em.add_field(name="Success", value=f"Successfully sold {shares_traded} coin/s of {coin_name} for ${round(subtotal,4)}")
 
     await ctx.send(embed=em)
 
@@ -1076,4 +1074,4 @@ add_shares.start()
 print_cache.start()
 # changes status
 
-bot.run(imp_info["test token"]) # runs the bot
+bot.run(imp_info["token"]) # runs the bot

@@ -153,7 +153,7 @@ class User:
         self.wallet -=amount
         self.accounts[account_name]["balance"] += amount
 
-        return f"Deposited ${amount} into {account_name} account successfully"
+        return f"Deposited ${round(amount,4)} into {account_name} account successfully"
 
     def bank_withdraw(self, amount:float, account_name:str):
         """
@@ -170,7 +170,7 @@ class User:
         self.accounts[account_name]["balance"] -= amount
         self.wallet += amount
 
-        return f"Withdrew ${amount} from {account_name} account successfully"
+        return f"Withdrew ${round(amount,4)} from {account_name} account successfully"
 
     def transfer(self, amount:float, uid:int):
         """
@@ -195,7 +195,7 @@ class User:
         recipient.wallet += amount
 
         recipient.save()
-        return f"Transfer of ${amount} sent successfully"
+        return f"Transfer of ${round(amount,4)} sent successfully"
 
     def shares_exceeds_trade_limit(self, shares:int)->bool:
         """

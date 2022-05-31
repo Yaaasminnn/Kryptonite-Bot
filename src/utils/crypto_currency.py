@@ -565,7 +565,7 @@ class CryptoCurrency:
     def __str__(self):
         return f"name: {self.name}, created date: {self.creation_date}, uid: {self.uid}, total_shares: {self.total_shares}, market_cap: {self.market_cap},\n" \
                f"delete_value: {self.delete_value}, value: {self.value}, Vmax_mag: {self.Vmax_mag}, threshold: {self.threshold},\n" \
-               f"Tmax_mag: {self.Tmax_mag},\nvalues: {self.values}\n\n"
+               f"Tmax_mag: {self.Tmax_mag},\n\n\n"
 
     @staticmethod
     def exists(coin_name:str): # determines if a currency exists in the database
