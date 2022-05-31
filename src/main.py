@@ -851,17 +851,15 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
         return
 
     shares = floor(shares) # makes sure all shares bought are int. not float.
+    user = User(ctx.author.id)  # loads the user
 
     if user.shares_exceeds_trade_limit(shares): # if the user has attempted to trade more shares than they are allowed to.
-        print("fg")
         em.add_field(name="Error", value="Shares exceed trading limit.", inline=False)
         em.add_field(name="To buy:", value=f"{shares}", inline=False)
         em.add_field(name="Max:", value=f"{trading_limit_shares}", inline=False)
         await ctx.send(embed=em)
         
         return
-
-    user = User(ctx.author.id) # loads the user
 
     if not CryptoCurrency.exists(coin_name): # checks if the coin exists. if so, load up the coin
         em.add_field(name="Error", value=f"Crypto curency: {coin_name} does not exist")
@@ -966,6 +964,7 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
         return
 
     shares = floor(shares) # makes sure all shares bought are int. not float.
+    user = User(ctx.author.id)  # loads the user
 
     # if the user has attempted to trade more shares than they are allowed to.
     if user.shares_exceeds_trade_limit(shares):
@@ -976,9 +975,6 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
         await ctx.send(embed=em)
        
         return
-
-
-    user = User(ctx.author.id) # loads the user
 
     if not CryptoCurrency.exists(coin_name): # checks if the coin exists. if so, load up the coin
         em.add_field(name="Error", value=f"Crypto curency: {coin_name} does not exist")
