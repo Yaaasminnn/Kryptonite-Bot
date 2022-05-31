@@ -714,6 +714,12 @@ async def transfer(ctx, amount:float, member:discord.Member):
         em.add_field(name="Transfer", value="Amount must be a positive number")
         await ctx.send(embed=em)
         return
+    if amount > max_transfer_limit: # amount exceeds the trtansfer limit
+        em.add_field(name="Error", value="Exceeds transfer limit", inline=False)
+        em.add_field(name="max limit:", value=f"${max_transfer_limit}", inline=False)
+        em.add_field(nmae="To send:", value=f"${max_transfer_limit}"inline=False)
+        await ctx.send(embed=em)
+        return
 
     msg = user.transfer(amount=amount, uid=member.id)
 
