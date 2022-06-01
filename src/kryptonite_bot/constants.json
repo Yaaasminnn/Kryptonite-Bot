@@ -5,7 +5,7 @@
   "tax free trading limit dollars": 10000000,
   "tax rate": 1.12,
   "start amount": 20000,
-  "max balance": 1e102,
+  "max balance": 1e14,
   "max market cap": 1e302,
   "shares per interval": 50,
   "min_coins": 2,

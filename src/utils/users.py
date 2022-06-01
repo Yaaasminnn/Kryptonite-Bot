@@ -74,7 +74,12 @@ class User:
         user = {}
 
         user["uid"] = self.uid
-        user["wallet"] = self.wallet
+
+        # prevents both wallet and bank account from exceeding the limits. provided they werent already nan.
+        user["wallet"] = min(self.wallet, max_balance)
+        for account in ["tfa", "ntfa"]:
+            self.accounts[account]["balance"] = min(self.accounts[account]["balance"], max_balance)
+
         user["accounts"] = self.accounts
         user["last_accessed"] = self.last_accessed
 
