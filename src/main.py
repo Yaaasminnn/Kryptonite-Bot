@@ -986,7 +986,7 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
     em.add_field(name="Success", value=f"Successfully purchased {shares_traded} coin/s of {coin_name} for ${round(total,4)}")
 
     # log the output
-    print(f"{ctx.author.display_name} sold {shares_traded} coin/s of {coin_name} for ${round(subtotal, 4)} from their {account_name.upper()} account")
+    print(f"{ctx.author.display_name} bought {shares_traded} coin/s of {coin_name} for ${round(subtotal, 4)} from their {account_name.upper()} account")
 
     await ctx.send(ctx.author.mention, embed=em)
 
