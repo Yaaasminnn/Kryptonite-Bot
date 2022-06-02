@@ -53,9 +53,11 @@ async def add_currencies(): # determines if we should add a currency or not
 async def add_shares(): # adds more shares to all coins once every day
     for currency_dict in crypto_cache:
         coin = CryptoCurrency(currency_dict)
-        coin.total_shares += randint(100, 500)
+        diff = choice([-1, 1]) * randint(5_000, 25_000)
+        coin.total_shares += diff
         coin.save()
         coin.cache()
+        print(f"{'Added' if diff >0 else 'Subtracted'} {diff} shares to {coin.name}!") # logs it
 
 @loop(hours=1)
 async def print_cache(): # prints the cache every hour
