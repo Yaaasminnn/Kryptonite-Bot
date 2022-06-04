@@ -1,15 +1,10 @@
 {
-  "Version": "1.12",
+  "Version": "1.13",
   "logs": {
-    "Owner can see people's balances": "Nobody is safe",
-    "Logging": "nothing much to say here. server side",
-    "Adding shares is not just increasing": "Every day shares are added. now, they can be added or subtracted. from 5-25k in magnitude",
-    "All cooldown are 10 seconds": "yw kunal",
-    "Beg command fixed": "the embed colour was not valid. apparently orange dosent exist to discord",
-    "Change log command": "you can run '>cl' or '>change_log' to see whats changed.",
-    "Holdings show value": "It dosent just show how many shares you own, but also how much they are worth",
-    "Number of holdings shown in bal": "check '>b' for more info",
-    "Cooldown embed is now red": "cool.",
-    "Embeds now ping and display user avatars": "only shows them on all commands except help, list and view"
+    "Better logs": "dosent mean much for yall :P",
+    "Embeds fix": "embeds now show the user's actual username, not nickname",
+    "Currencies now are added every day": "instead of twice a week. keep in mind, thats average. its not garunteed to spawn one every day at any set time. its just likely to",
+    "Increased the maximum number of currencies": "Max of 8 currencies at any time",
+    "Responses": "Now just replies to your messages instead of pinging you."
   }
 }

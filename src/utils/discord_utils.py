@@ -33,9 +33,9 @@ emb_colours = [ #COLOURS FOR EMBEDS. make this variable names like blue = c.blue
     c.teal() ]
 
 
-async def dm_user(bot, id:int, msg:str): # dm's a user a message
+async def dm_user(bot, id:int, msg:str=None, embed:discord.Embed=None): # dm's a user a message
     dm_channel = await bot.fetch_user(id) # gets the dm channel
-    await discord.DMChannel.send(dm_channel, msg)
+    await discord.DMChannel.send(dm_channel, msg, embed=embed)
 
 async def embed(): pass # makes an embed ???
 

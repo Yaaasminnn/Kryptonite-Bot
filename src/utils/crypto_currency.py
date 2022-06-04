@@ -5,6 +5,7 @@ import datetime
 from src.utils.json_utils import *
 from src.utils.math_funcs import *
 from src.constants import *
+from src.utils.log import *
 from discord.ext.tasks import loop
 crypto_cache = [] # the list of crypto currencies. we use this if we wants to retrieve information on a currency
 
@@ -41,13 +42,13 @@ async def add_currencies(): # determines if we should add a currency or not
     db = load_json("src/db/crypto_currencies.json")
     if db["count"] < min_coins: # always adds a coin
         coin = CryptoCurrency()
-        print(f"Added new currency named {coin.name}!")
+        logMsg(f"Added new currency named {coin.name}!")
     elif db["count"] > max_coins: # never adds a coin
         return
     else: # there is a small chance of adding a coin
-        if randint(1,5040) == 1: # once a week
+        if randint(1,1440) == 1: # once a day on average
             coin = CryptoCurrency()
-            print(f"Added new currency named {coin.name}!")
+            logMsg(f"Added new currency named {coin.name}!")
 
 @loop(hours=24)
 async def add_shares(): # adds more shares to all coins once every day
@@ -57,13 +58,13 @@ async def add_shares(): # adds more shares to all coins once every day
         coin.total_shares += diff
         coin.save()
         coin.cache()
-        print(f"{'Added' if diff >0 else 'Subtracted'} {diff} shares to {coin.name}!") # logs it
+        logMsg(f"{'Added' if diff >0 else 'Subtracted'} {diff} shares to {coin.name}!") # logs it
 
 @loop(hours=1)
 async def print_cache(): # prints the cache every hour
-    print("CRYPTO CACHE:")
+    logMsg("CRYPTO CACHE:")
     for currency_dict in crypto_cache:
-        print(CryptoCurrency(currency_dict))
+        logMsg(CryptoCurrency(currency_dict))
 
 class CryptoCurrency:
     def __init__(self, currency:dict=None):
@@ -306,7 +307,8 @@ class CryptoCurrency:
             if cached["name"] == self.name:
                 crypto_cache.remove(cached)
                 break
-        #return db# returns the db
+
+        logMsg(F"deleted {self.name}") # logs it
 
     def compute(self):
         """
@@ -620,7 +622,7 @@ class CryptoCurrency:
 
         Used after we finish calculating a currency's change in value
         """
-        self.value = v
+        self.value = v # modifies the cache
 
     def calc_cost(self, v:float, shares:int):
         """
