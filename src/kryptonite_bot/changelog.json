@@ -1,10 +1,10 @@
 {
-  "Version": "1.13",
+  "Version": "1.1.4",
   "logs": {
-    "Better logs": "dosent mean much for yall :P",
-    "Embeds fix": "embeds now show the user's actual username, not nickname",
-    "Currencies now are added every day": "instead of twice a week. keep in mind, thats average. its not garunteed to spawn one every day at any set time. its just likely to",
-    "Increased the maximum number of currencies": "Max of 8 currencies at any time",
-    "Responses": "Now just replies to your messages instead of pinging you."
+    "buy actually fluctuaes the value": "gglgl",
+    "lower command exploit fixed": "u cant just use lower 35",
+    "lowered trade limits": "tax free traders can trade up to 1mil dollars at once",
+    "start amount set to 200": "not 20 grand lol",
+    "coins are generated every 2 days": "nothing to say"
   }
 }

@@ -46,7 +46,7 @@ async def add_currencies(): # determines if we should add a currency or not
     elif db["count"] > max_coins: # never adds a coin
         return
     else: # there is a small chance of adding a coin
-        if randint(1,1440) == 1: # once a day on average
+        if randint(1,2880) == 1: # once every 2 days on average
             coin = CryptoCurrency()
             logMsg(f"Added new currency named {coin.name}!")
 

@@ -624,9 +624,9 @@ async def lower(ctx, guess:int, amount:float):
 
     if guess <= reference: # if the user number is less than the generated on, the user wins
         won=True
-        # if less than 35, give 0.25x less for every 5 points lower
-        if guess < 35:
-            change = max(1, int(amount + (0.05*(guess - 35)*amount) ) )
+        # if less than 45, give 25% less for every 5 points lower
+        if guess < 45:
+            change = max(1, int(amount + (0.05*(guess - 50)*amount)))
             user.wallet += change
 
         # if higher than 65, 0.25x more for every 5 points higher
@@ -921,7 +921,7 @@ async def can_afford(ctx, account_name:str=None, coin_name:str=None, amount:floa
 
 
 @bot.command(aliases=["purchase", "p"])
-@commands.cooldown(1, 10, commands.BucketType.user) # only used once per 15 seconds
+@commands.cooldown(1, 5, commands.BucketType.user) # only used once per 15 seconds
 async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currency
     """
     Buys shares of a cryptocurrency.
@@ -1021,6 +1021,7 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
 
     # saves
     coin.save()
+    coin.cache()
     user.save()
 
     # the embed showing success
@@ -1032,7 +1033,7 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
     await ctx.send(embed=em, reference=ctx.message)
 
 @bot.command(aliases=["s"])
-@commands.cooldown(1, 10, commands.BucketType.user) # only used once per 15 seconds
+@commands.cooldown(1, 5, commands.BucketType.user) # only used once per 15 seconds
 async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a currency
     """
     Sells shares of a cryptocurrency.
@@ -1131,6 +1132,7 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
 
     # saves
     coin.save()
+    coin.cache()
     user.save()
 
     # the embed for successful trades
