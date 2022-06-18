@@ -167,7 +167,8 @@ def buy_test(uid, account_name:str, coin_name:str, shares:int):
             shares = 0
 
         shares_traded += deducted_shares
-        print("shares: ", shares, "\nvalue: ", v, "\nshares traded: ", shares_traded, "\nsubtotal: ",subtotal, "\nmax: ", coin.max_value,"\n")
+        print("value: ", v)
+        #print("shares: ", shares, "\nvalue: ", v, "\nshares traded: ", shares_traded, "\nsubtotal: ",subtotal, "\nmax: ", coin.max_value,"\n")
 
     total = user.calc_tax(account_name=account_name, subtotal=subtotal) # the total including taxes
     print("total", total)
@@ -295,11 +296,13 @@ if __name__ == '__main__':
     load_db_into_cache_sync()
 
     coin = CryptoCurrency()
+    coin.value = 50
+    coin.save()
     #coin.value = 99
     #coin.total_shares = 100
     #coin.save()
 
-    shares = 1
+    shares = 500_000
 
     #calc_value_test(coin, shares=shares, buying=True)
 

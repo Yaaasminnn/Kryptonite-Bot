@@ -282,7 +282,7 @@ class CryptoCurrency:
                 crypto_cache[i] = currency
                 return
 
-        crypto_cache.append(currency)
+        crypto_cache.append(currency) # if it dosent exist, add it
 
     def delete(self):
         """

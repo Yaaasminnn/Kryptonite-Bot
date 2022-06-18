@@ -982,6 +982,7 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
         deduted_shares = min(shares_per_interval, shares) # the number of shares we calculate per iteration
 
         v = coin.calc_value(v, deduted_shares, buying=True) # given the number of shares, calculate the new v
+        #print(v)
         subtotal += coin.calc_cost(v, deduted_shares) # calculates the subtotal given v and the number of shares
 
         shares -= deduted_shares # subtracts the number of shares we used this iteration
@@ -1020,7 +1021,7 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
     coin.should_delete() # checks if the coin has crashed.
 
     # saves
-    coin.save()
+    #coin.save()
     coin.cache()
     user.save()
 
@@ -1028,7 +1029,7 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
     em.add_field(name="Success", value=f"Successfully purchased {shares_traded} coin/s of {coin_name} for ${round(total,4)}")
 
     # log the output
-    logMsg(f"{ctx.author.name} bought {shares_traded} coin/s of {coin_name} for ${round(subtotal, 4)} from their {account_name.upper()} account")
+    logMsg(f"{ctx.author.name} bought {shares_traded} coin/s of {coin_name} for ${round(subtotal, 4)} from their {account_name.upper()} account. {coin_name} is now worth ${v}")
 
     await ctx.send(embed=em, reference=ctx.message)
 
@@ -1095,7 +1096,7 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
 
         deduted_shares = min(shares_per_interval, shares) # the number of shares we calculate per iteration
 
-        v = coin.calc_value(v, deduted_shares, buying=True) # given the number of shares, calculate the new v
+        v = coin.calc_value(v, deduted_shares, buying=False ) # given the number of shares, calculate the new v
         subtotal += coin.calc_cost(v, deduted_shares) # calculates the subtotal given v and the number of shares
 
         shares -= deduted_shares # subtracts the number of shares we used this iteration
@@ -1131,7 +1132,7 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
     coin.should_delete()  # checks if the coin has crashed.
 
     # saves
-    coin.save()
+    #coin.save()
     coin.cache()
     user.save()
 
@@ -1139,7 +1140,7 @@ async def sell(ctx, account_name:str, coin_name:str, shares:int): # sell a curre
     em.add_field(name="Success", value=f"Successfully sold {shares_traded} coin/s of {coin_name} for ${round(subtotal,4)}")
 
     # log the output
-    logMsg(f"{ctx.author.name} sold {shares_traded} coin/s of {coin_name} for ${round(subtotal,4)} from their {account_name.upper()} account")
+    logMsg(f"{ctx.author.name} sold {shares_traded} coin/s of {coin_name} for ${round(subtotal,4)} from their {account_name.upper()} account. {coin_name} is now worth ${v}")
 
     await ctx.send(embed=em, reference=ctx.message)
 
