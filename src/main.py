@@ -902,7 +902,17 @@ async def list(ctx): # view a list of all currencies and their values
 
 @bot.command(aliases=['ca'])
 async def can_afford(ctx, account_name:str=None, coin_name:str=None, amount:float=None):
-    """"""
+    """
+
+    while (True):
+        # shares = 50
+        # calc new value
+        # total - coin.calc_cost(v, shares)
+        # if total <0:
+        # while loop shrinking shares and seeing if they can afford it. if it reaches 0, break
+        # tot_shares += shares
+        # return tot_shares
+    """
 
     if ctx.author.bot: return # does not answer to bots
 
@@ -994,6 +1004,7 @@ async def buy(ctx, account_name:str, coin_name:str, shares:int): # buy a currenc
 
 
     # a number of checks to ensure the purchase is valid
+    # shares you can afford instead tells you to check >can_afford
     if not user.has_enough_balance(account_name=account_name, cost=total): # if the user cannot afford to pay
         em.add_field(name="Error", value="Does not have enough money.", inline=False)
         em.add_field(name="Has:", value=f"${round(user.accounts[account_name]['balance'],4)}", inline=False)
