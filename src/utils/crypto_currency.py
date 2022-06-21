@@ -592,28 +592,20 @@ class CryptoCurrency:
         in a loop where self.value is not changed.
 
         Explain the formula:
-            based on self.buy()
-            v= value || self.value
-            shares = # of shares
-            m_cap = market cap || self.market_cap
-            total_shares = total shares || self.total_shares
+            adds a delta onto the current value.
+            this delta is determined by dividing shares by the market cap.
+            shares and market cap will be constant during a transaction.
+            This means that no matter the value of V, it will increase by the same amount.
+            it increases purely by shares bought.
 
-            m_cap = total_shares * value
-            volume = value * shares
-            percent = volume/m_cap   # volume's percentage of the market cap.
-            delta = percent * value # value increases by the percentage of the market cap * current value
-            value = value + delta # add the delta to v
+            The reason market cap was chose instead of shares was purely because market cap is larger,
+            thus, self.value fluctuates less.
 
-            formula = v + (v * percent)
-            = v + (v * (volume/m_cap))
-            = v + (v * (v * shares)/m_cap)
-            = v + (v * (v * shares)/(total_shares * v))
-            = v + (v^2 * shares/(total_shares * v))
-            = v + (v * shares)/total_shares
+            Because the delta is independent of v, it makes it much easier to predict and control.
         """
 
-        if buying: v += (v*shares)/self.total_shares
-        else: v -= (v*shares)/self.total_shares
+        if buying: v += shares/self.market_cap
+        else: v -= shares/self.market_cap
         return min(self.max_value, max(v, 0.0)) # value cannot fall below 0 but cannot be higher than max_market_cap / total shares
 
     def change_currency_value(self, v:float):

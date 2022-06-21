@@ -1,10 +1,7 @@
 {
-  "Version": "1.1.4",
+  "Version": "1.1.5",
   "logs": {
-    "buy actually fluctuaes the value": "gglgl",
-    "lower command exploit fixed": "u cant just use lower 35",
-    "lowered trade limits": "tax free traders can trade up to 1mil dollars at once",
-    "start amount set to 200": "not 20 grand lol",
-    "coins are generated every 2 days": "nothing to say"
+    "fixed trading exploit where values would increase rapidly on certain buys": "now it should be fine",
+    "changed constants": "max transfer limit is 10mil, max trading limit in shares is 100k"
   }
 }
