@@ -197,11 +197,11 @@ async def holdings(ctx):
 @help.command()
 async def transfer(ctx):
     em = discord.Embed(title="Transfer", description="Transfer money from your wallet to another's wallet.", color=c.purple())
-    em.add_field(name="Usage", value="'>transfer [**amount**] [**@user**]' or '>t [**amount**] [**@user**]'", inline=False)
-    em.add_field(name="Example", value=">transfer 500 @user\n"
-                                       "*Transfers $500 from your wallet to @user's wallet*", inline=False)
+    em.add_field(name="Usage", value="'>transfer [**amount**] [**@user**] [**message**]' or '>t [**amount**] [**@user**] [**message**]'", inline=False)
+    em.add_field(name="Example", value=">transfer 500 @user hello\n"
+                                       "*Transfers $500 from your wallet to @user's wallet and dm's the recipient 'hello'*", inline=False)
     em.add_field(name="Description", value=f"transfer money from your wallet to the specified user's wallet.\n "
-                                           f"Has to be less than ${max_transfer_limit/100} and greater then 0 since you cant steal money from people.\n\n"
+                                           f"Has to be less than ${max_transfer_limit/100} and greater then 0.\n\n"
                                            f"For more info on your wallet, use; '>help wallet'",
                  inline=False)
 
@@ -768,7 +768,7 @@ async def holdings(ctx, account_name=None):
     await ctx.send(embed=em, reference=ctx.message) # returns the message
 
 @bot.command(aliases=["t"])
-async def transfer(ctx, amount:float, member:discord.Member):
+async def transfer(ctx, amount:float, member:discord.Member, message:str = None):
     """
     Transfers money from 1 wallet to the next.
 
@@ -794,11 +794,17 @@ async def transfer(ctx, amount:float, member:discord.Member):
         await ctx.send(embed=em, reference=ctx.message)
         return
 
-    msg = user.transfer(amount=amount, uid=member.id)
+    res = user.transfer(amount=amount, uid=member.id) # transfers the money
 
-    em.add_field(name="Transfer", value=f"{msg} to {member.name}")
+    em.add_field(name="Transfer", value=f"{res} to {member.name}")
 
-    await ctx.send(embed=em, reference=ctx.message)
+    await ctx.send(embed=em, reference=ctx.message) # sends the response
+
+    if message is not None: # dm's the message
+        dm_em = discord.Embed(title="Money Transfer", colour=c.orange())
+        dm_em.add_field(name=f"{ctx.author} sent you money", value=amount, inline=False)
+        dm_em.add_field(name="Message: ", value=message, inline=False)
+        await dm_user(bot, id=member.id, embed=dm_em)
 
     user.save() # saves the user
 

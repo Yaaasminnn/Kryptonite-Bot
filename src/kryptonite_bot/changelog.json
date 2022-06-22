@@ -1,7 +1,6 @@
 {
-  "Version": "1.1.5.1",
+  "Version": "1.1.6",
   "logs": {
-    "fixed anticipated buying exploit. value is not exploitable now": "for real this time",
-    "updated the number of shares for coins": "now 1-10mil instead of 90k-2mil"
+    "u attach a message to another user when u transfer": ">transfer [**amount**] [**@user**] [**message**]"
   }
 }
