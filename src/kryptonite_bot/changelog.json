@@ -1,7 +1,7 @@
 {
-  "Version": "1.1.5",
+  "Version": "1.1.5.1",
   "logs": {
-    "fixed trading exploit where values would increase rapidly on certain buys": "now it should be fine",
-    "changed constants": "max transfer limit is 10mil, max trading limit in shares is 100k"
+    "fixed anticipated buying exploit. value is not exploitable now": "for real this time",
+    "updated the number of shares for coins": "now 1-10mil instead of 90k-2mil"
   }
 }

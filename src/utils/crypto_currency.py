@@ -103,7 +103,7 @@ class CryptoCurrency:
                 uniform(0.005, 0.0005)*self.value
             )
             # if too volatile, 5M-15M
-            self.total_shares = randint(90_000, 2_000_000) # normally 9k-100k. make it between that and 90k-2m. 100k shares = 30ish delta
+            self.total_shares = randint(1_000_000, 10_000_000) # normally 9k-100k. make it between that and 90k-2m. 100k shares = 30ish delta
 
             self.threshold = 35.0 # normally 50.0
             self.Tmax_mag = 1.0
@@ -593,19 +593,18 @@ class CryptoCurrency:
 
         Explain the formula:
             adds a delta onto the current value.
-            this delta is determined by dividing shares by the market cap.
-            shares and market cap will be constant during a transaction.
+            this delta is determined by dividing shares by the total number of shares.
+            shares and total_shares will be constant during a transaction.
             This means that no matter the value of V, it will increase by the same amount.
             it increases purely by shares bought.
 
-            The reason market cap was chose instead of shares was purely because market cap is larger,
-            thus, self.value fluctuates less.
+            We use total_shares because it is unaffected by the value of the coin, meaning it cannot be exploited.
 
             Because the delta is independent of v, it makes it much easier to predict and control.
         """
 
-        if buying: v += shares/self.market_cap
-        else: v -= shares/self.market_cap
+        if buying: v += shares/self.total_shares
+        else: v -= shares/self.total_shares
         return min(self.max_value, max(v, 0.0)) # value cannot fall below 0 but cannot be higher than max_market_cap / total shares
 
     def change_currency_value(self, v:float):
