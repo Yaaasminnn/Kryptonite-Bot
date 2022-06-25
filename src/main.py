@@ -47,6 +47,8 @@ async def on_ready(): # runs this on startup
 
     await reload_constants() # loads all the constants into memory
 
+    await clear_cache()
+
     await load_db_into_cache() # loads all currencies
 
     await print_cache() # prints the cache

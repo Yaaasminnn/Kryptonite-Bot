@@ -15,6 +15,12 @@ async def load_db_into_cache(): # loads all currencies into the crypto cache
     for currency_dict in db["currencies"]:
         crypto_cache.append(currency_dict)
 
+async def clear_cache():
+    # clears the cache. used on on_ready.
+    # if the bot disconnects while still running, this will prevent the cache from being duplicated
+    for i in range(len(crypto_cache)-1, 0, -1):
+        crypto_cache.pop(i)
+
 def load_db_into_cache_sync(): # loads all currencies into the crypto cache
     db = load_json("src/db/crypto_currencies.json")
     for currency_dict in db["currencies"]:
