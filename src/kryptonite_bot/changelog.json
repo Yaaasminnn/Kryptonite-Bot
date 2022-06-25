@@ -1,6 +1,6 @@
 {
-  "Version": "1.1.6",
+  "Version": "1.1.7",
   "logs": {
-    "u attach a message to another user when u transfer": ">transfer [**amount**] [**@user**] [**message**]"
+    "cryptocache regen": "cryptocache regenerates properly when reconnecting. before it would duplicate it because t wasnt cleared."
   }
 }
