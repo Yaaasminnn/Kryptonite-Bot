@@ -1,6 +1,6 @@
 {
-  "Version": "1.1.7",
+  "Version": "1.1.8",
   "logs": {
-    "cryptocache regen": "cryptocache regenerates properly when reconnecting. before it would duplicate it because t wasnt cleared."
+    "changed constants": "tax-free trades have a max limit of 500k again"
   }
 }
