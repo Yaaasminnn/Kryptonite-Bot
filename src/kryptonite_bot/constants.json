@@ -9,6 +9,6 @@
   "max market cap": 1e302,
   "shares per interval": 50,
   "min_coins": 2,
-  "max_coins": 7,
+  "max_coins": 5,
   "poverty line": 50
 }
